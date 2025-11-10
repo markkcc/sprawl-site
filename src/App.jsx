@@ -5,6 +5,7 @@ function App() {
   const [memoryAddresses, setMemoryAddresses] = useState([])
   const [expandedTalks, setExpandedTalks] = useState({})
   const [currentTheme, setCurrentTheme] = useState('default')
+  const [olderEventsExpanded, setOlderEventsExpanded] = useState(false)
 
   const generateHexAddress = () => {
     return '0x' + Math.random().toString(16).substring(2, 10).toUpperCase()
@@ -46,7 +47,22 @@ function App() {
     |_|
 `
 
-  const talks = [
+  const talks0x2 = [
+    {
+      id: 1,
+      title: "TBD",
+      speaker: "TBD",
+      description: "Speaker and talk details coming soon!"
+    },
+    {
+      id: 2,
+      title: "TBD",
+      speaker: "TBD",
+      description: "Speaker and talk details coming soon!"
+    }
+  ]
+
+  const talks0x1 = [
     {
       id: 1,
       title: "A Secret Talk about macOS Detection Engineering",
@@ -142,32 +158,35 @@ This talk will test the promise of privacy provided by these systems -- covering
         <div className="sprawl-info">
           <div className="info-header">
             <div>A non-corporate technical meetup run by a NYC hacker community.</div>
-            <div>3x 20-min talks by smart people we all like.</div>
-            <div>Hosted every couple of months.</div>
+            <div>20-min talks by smart people we all like.</div>
+            <div>Hosted every two months.</div>
           </div>
 
+          {/* Sprawl 0x2 Section */}
           <div className="event-details">
-            <h2>-- Sprawl 0x1 --</h2>
-            <div>Date: October 2nd, 2025</div>
-            <div>Invite: <a href="https://luma.com/zxlmzqg3" target="_blank" rel="noopener noreferrer">https://luma.com/zxlmzqg3</a></div>
+            <h2>-- Sprawl 0x2 --</h2>
+            <div>December 4th, 2025</div>
+            <a href="#register" className="register-button" target="_blank" rel="noopener noreferrer">
+              Register
+            </a>
           </div>
 
           <div className="talks-container">
-            {talks.map(talk => (
-              <div key={talk.id} className="talk-box">
+            {talks0x2.map(talk => (
+              <div key={`0x2-${talk.id}`} className="talk-box">
                 <div
                   className="talk-header"
-                  onClick={() => toggleTalk(talk.id)}
+                  onClick={() => toggleTalk(`0x2-${talk.id}`)}
                 >
                   <span className="toggle-icon">
-                    [ {expandedTalks[talk.id] ? '-' : '+'} ]
+                    [ {expandedTalks[`0x2-${talk.id}`] ? '-' : '+'} ]
                   </span>
                   <div className="talk-info">
                     <div className="talk-title">Talk {talk.id}: {talk.title}</div>
                     <div className="talk-speaker">{talk.speaker}</div>
                   </div>
                 </div>
-                {expandedTalks[talk.id] && (
+                {expandedTalks[`0x2-${talk.id}`] && (
                   <div className="talk-description">
                     {talk.description.split('\n\n').map((paragraph, index) => (
                       <p key={index} style={{ marginBottom: '1em' }}>
@@ -178,6 +197,56 @@ This talk will test the promise of privacy provided by these systems -- covering
                 )}
               </div>
             ))}
+          </div>
+
+          {/* Older Events Section */}
+          <div className="older-events-section">
+            <div
+              className="older-events-header"
+              onClick={() => setOlderEventsExpanded(!olderEventsExpanded)}
+            >
+              <span className="toggle-icon">
+                [ {olderEventsExpanded ? '-' : '+'} ]
+              </span>
+              <h3>Older Events</h3>
+            </div>
+
+            {olderEventsExpanded && (
+              <div className="older-events-content">
+                <div className="event-details">
+                  <h2>-- Sprawl 0x1 --</h2>
+                  <div>October 2nd, 2025</div>
+                </div>
+
+                <div className="talks-container">
+                  {talks0x1.map(talk => (
+                    <div key={`0x1-${talk.id}`} className="talk-box">
+                      <div
+                        className="talk-header"
+                        onClick={() => toggleTalk(`0x1-${talk.id}`)}
+                      >
+                        <span className="toggle-icon">
+                          [ {expandedTalks[`0x1-${talk.id}`] ? '-' : '+'} ]
+                        </span>
+                        <div className="talk-info">
+                          <div className="talk-title">Talk {talk.id}: {talk.title}</div>
+                          <div className="talk-speaker">{talk.speaker}</div>
+                        </div>
+                      </div>
+                      {expandedTalks[`0x1-${talk.id}`] && (
+                        <div className="talk-description">
+                          {talk.description.split('\n\n').map((paragraph, index) => (
+                            <p key={index} style={{ marginBottom: '1em' }}>
+                              {paragraph}
+                            </p>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </div>

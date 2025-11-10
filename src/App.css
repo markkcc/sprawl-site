@@ -153,6 +153,29 @@
   color: #80ff80;
 }
 
+.theme-green .register-button {
+  background: transparent;
+  border-color: #00ff00;
+  color: #00ff00;
+}
+
+.theme-green .register-button:hover {
+  background: rgba(0, 255, 0, 0.2);
+  border-color: #00ff00;
+}
+
+.theme-green .older-events-section {
+  border-top-color: #00ff00;
+}
+
+.theme-green .older-events-header:hover {
+  background: rgba(0, 255, 0, 0.1);
+}
+
+.theme-green .older-events-header h3 {
+  color: #40ff40;
+}
+
 /* Purple theme - Reader mode */
 .theme-purple * {
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen-Sans, Ubuntu, Cantarell, "Helvetica Neue", sans-serif !important;
@@ -206,6 +229,40 @@
   border-radius: 8px;
   padding: 2rem;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.theme-purple .register-button {
+  background: transparent !important;
+  border-color: #333333 !important;
+  color: #333333 !important;
+  font-family: 'Playfair Display', serif !important;
+  font-style: italic;
+  font-size: 24px;
+  text-decoration: none !important;
+}
+
+.theme-purple .register-button:hover {
+  background: #333333 !important;
+  color: #ffffff !important;
+  border-color: #333333 !important;
+  text-decoration: none !important;
+}
+
+.theme-purple .register-button::before,
+.theme-purple .register-button::after {
+  display: none !important;
+}
+
+.theme-purple .older-events-section {
+  border-top-color: #666666;
+}
+
+.theme-purple .older-events-header:hover {
+  background: rgba(0, 0, 0, 0.05);
+}
+
+.theme-purple .older-events-header h3 {
+  color: #333333;
 }
 
 .fancy-title {
@@ -529,6 +586,264 @@
   }
 }
 
+/* Register Button Styles */
+.register-button {
+  display: inline-block;
+  margin-top: 1.5rem;
+  padding: 0.3rem 1.5rem;
+  background: transparent;
+  color: #ff00ff;
+  font-family: 'VT323', monospace;
+  font-size: 22px;
+  font-weight: bold;
+  text-decoration: none !important;
+  border: 2px solid #ff00ff;
+  border-radius: 4px;
+  cursor: pointer;
+  position: relative;
+}
+
+.register-button:hover {
+  text-decoration: none !important;
+  background: rgba(255, 0, 255, 0.2);
+  border-color: #ff00ff;
+}
+
+.register-button::before,
+.register-button::after {
+  content: 'Register';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.3rem 1.5rem;
+}
+
+.register-button::before {
+  color: #00ffff;
+  animation: button-glitch-1 2.5s infinite;
+  z-index: -1;
+}
+
+.register-button::after {
+  color: #ff00ff;
+  animation: button-glitch-2 3s infinite;
+  z-index: -2;
+}
+
+.register-button:hover::before {
+  animation: glitch-1-aggressive 0.3s infinite;
+}
+
+.register-button:hover::after {
+  animation: glitch-2-aggressive 0.4s infinite;
+}
+
+@keyframes glitch-1 {
+  0%, 100% {
+    transform: translate(0);
+  }
+  20% {
+    transform: translate(-2px, 2px);
+  }
+  40% {
+    transform: translate(-2px, -2px);
+  }
+  60% {
+    transform: translate(2px, 2px);
+  }
+  80% {
+    transform: translate(2px, -2px);
+  }
+}
+
+@keyframes glitch-2 {
+  0%, 100% {
+    transform: translate(0);
+  }
+  20% {
+    transform: translate(2px, -2px);
+  }
+  40% {
+    transform: translate(2px, 2px);
+  }
+  60% {
+    transform: translate(-2px, -2px);
+  }
+  80% {
+    transform: translate(-2px, 2px);
+  }
+}
+
+@keyframes button-glitch-1 {
+  0%, 100% {
+    transform: translate(0);
+    opacity: 0;
+  }
+  2% {
+    transform: translate(-2px, 2px);
+    opacity: 0.7;
+  }
+  4% {
+    transform: translate(2px, -2px);
+    opacity: 0.7;
+  }
+  6% {
+    transform: translate(0);
+    opacity: 0;
+  }
+}
+
+@keyframes button-glitch-2 {
+  0%, 100% {
+    transform: translate(0);
+    opacity: 0;
+  }
+  3% {
+    transform: translate(2px, -2px);
+    opacity: 0.7;
+  }
+  5% {
+    transform: translate(-2px, 2px);
+    opacity: 0.7;
+  }
+  7% {
+    transform: translate(0);
+    opacity: 0;
+  }
+}
+
+@keyframes glitch-1-aggressive {
+  0% {
+    transform: translate(-3px, 2px);
+    opacity: 0.9;
+  }
+  10% {
+    transform: translate(3px, -3px);
+    opacity: 0.9;
+  }
+  20% {
+    transform: translate(-2px, -2px);
+    opacity: 0.9;
+  }
+  30% {
+    transform: translate(4px, 3px);
+    opacity: 0.8;
+  }
+  40% {
+    transform: translate(-4px, 2px);
+    opacity: 0.9;
+  }
+  50% {
+    transform: translate(2px, -4px);
+    opacity: 0.8;
+  }
+  60% {
+    transform: translate(-3px, 3px);
+    opacity: 0.9;
+  }
+  70% {
+    transform: translate(3px, -2px);
+    opacity: 0.8;
+  }
+  80% {
+    transform: translate(-2px, 4px);
+    opacity: 0.9;
+  }
+  90% {
+    transform: translate(4px, -3px);
+    opacity: 0.8;
+  }
+  100% {
+    transform: translate(-3px, 2px);
+    opacity: 0.9;
+  }
+}
+
+@keyframes glitch-2-aggressive {
+  0% {
+    transform: translate(4px, -3px);
+    opacity: 0.9;
+  }
+  10% {
+    transform: translate(-4px, 3px);
+    opacity: 0.9;
+  }
+  20% {
+    transform: translate(3px, 2px);
+    opacity: 0.8;
+  }
+  30% {
+    transform: translate(-3px, -4px);
+    opacity: 0.9;
+  }
+  40% {
+    transform: translate(4px, -2px);
+    opacity: 0.8;
+  }
+  50% {
+    transform: translate(-3px, 4px);
+    opacity: 0.9;
+  }
+  60% {
+    transform: translate(2px, -3px);
+    opacity: 0.8;
+  }
+  70% {
+    transform: translate(-4px, 2px);
+    opacity: 0.9;
+  }
+  80% {
+    transform: translate(3px, -4px);
+    opacity: 0.9;
+  }
+  90% {
+    transform: translate(-2px, 3px);
+    opacity: 0.8;
+  }
+  100% {
+    transform: translate(4px, -3px);
+    opacity: 0.9;
+  }
+}
+
+/* Older Events Section */
+.older-events-section {
+  width: 100%;
+  margin-top: 3rem;
+  padding-top: 2rem;
+}
+
+.older-events-header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  cursor: pointer;
+  padding: 1rem;
+  transition: all 0.3s ease;
+}
+
+.older-events-header:hover {
+  background: rgba(0, 255, 255, 0.1);
+}
+
+.older-events-header h3 {
+  font-family: 'VT323', monospace;
+  font-size: 28px;
+  color: #ff00ff;
+  margin: 0;
+  font-weight: bold;
+}
+
+.older-events-content {
+  animation: fadeIn 0.3s ease;
+  margin-top: 1rem;
+}
+
 /* Responsive design */
 @media (max-width: 768px) {
   .fancy-title {
@@ -568,6 +883,15 @@
 
   .event-details h2 {
     font-size: 28px;
+  }
+
+  .register-button {
+    font-size: 20px;
+    padding: 0.3rem 1.2rem;
+  }
+
+  .older-events-header h3 {
+    font-size: 24px;
   }
 }
 
@@ -617,6 +941,15 @@
 
   .talk-description {
     padding: 0 0.5rem 0.5rem 2.5rem;
+  }
+
+  .register-button {
+    font-size: 18px;
+    padding: 0.3rem 1rem;
+  }
+
+  .older-events-header h3 {
+    font-size: 22px;
   }
 }
 
