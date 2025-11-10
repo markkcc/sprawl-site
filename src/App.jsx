@@ -165,7 +165,7 @@ This talk will test the promise of privacy provided by these systems -- covering
           {/* Sprawl 0x2 Section */}
           <div className="event-details">
             <h2>-- Sprawl 0x2 --</h2>
-            <div>December 4th, 2025</div>
+            <div>December 2nd, 2025</div>
             <a href="#register" className="register-button" target="_blank" rel="noopener noreferrer">
               Register
             </a>
