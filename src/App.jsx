@@ -1,15 +1,66 @@
 import { useState, useEffect } from 'react'
 import './App.css'
+import { decodeLumaCode } from './encodeUtils'
 
 function App() {
   const [memoryAddresses, setMemoryAddresses] = useState([])
   const [expandedTalks, setExpandedTalks] = useState({})
   const [currentTheme, setCurrentTheme] = useState('default')
   const [olderEventsExpanded, setOlderEventsExpanded] = useState(false)
+  const [stars, setStars] = useState([])
+  const [matrixColumns, setMatrixColumns] = useState([])
+  const [effectIntensity, setEffectIntensity] = useState(8) // Start at 8x intensity
+  const [hoveredTalk, setHoveredTalk] = useState(null)
+  const [registrationUnlockTime] = useState(new Date('2025-11-25T18:00:00-05:00'))
+  const [timeUntilUnlock, setTimeUntilUnlock] = useState(null)
+  const [isRegistrationOpen, setIsRegistrationOpen] = useState(false)
 
   const generateHexAddress = () => {
     return '0x' + Math.random().toString(16).substring(2, 10).toUpperCase()
   }
+
+  // Gradually decrease effect intensity over 4 seconds
+  useEffect(() => {
+    const steps = [8, 7, 6, 5, 4, 3, 2, 1] // 8 steps over 4 seconds
+    let currentStep = 0
+
+    const interval = setInterval(() => {
+      currentStep++
+      if (currentStep < steps.length) {
+        setEffectIntensity(steps[currentStep])
+      } else {
+        clearInterval(interval)
+      }
+    }, 500) // Every 500ms
+
+    return () => clearInterval(interval)
+  }, [])
+
+  // Registration countdown timer
+  useEffect(() => {
+    const updateCountdown = () => {
+      const now = new Date()
+      const timeDiff = registrationUnlockTime - now
+
+      if (timeDiff <= 0) {
+        setIsRegistrationOpen(true)
+        setTimeUntilUnlock(null)
+      } else {
+        setIsRegistrationOpen(false)
+        const days = Math.floor(timeDiff / (1000 * 60 * 60 * 24))
+        const hours = Math.floor((timeDiff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60))
+        const minutes = Math.floor((timeDiff % (1000 * 60 * 60)) / (1000 * 60))
+        const seconds = Math.floor((timeDiff % (1000 * 60)) / 1000)
+
+        setTimeUntilUnlock({ days, hours, minutes, seconds })
+      }
+    }
+
+    updateCountdown()
+    const interval = setInterval(updateCountdown, 1000)
+
+    return () => clearInterval(interval)
+  }, [registrationUnlockTime])
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -31,11 +82,77 @@ function App() {
     return () => clearInterval(interval)
   }, [])
 
+  // Star animation for Talk 1
+  useEffect(() => {
+    const starChars = ['*', '+', '.', '·', '✷', '✶', '✵', '✸', '✧', '✦']
+    const baseInterval = 333 // Normal rate: 3 per second
+    const currentIntensity = (hoveredTalk === '0x2-1' && !expandedTalks['0x2-1']) ? 8 : effectIntensity
+    const interval = setInterval(() => {
+      const newStar = {
+        id: Date.now() + Math.random(),
+        text: starChars[Math.floor(Math.random() * starChars.length)],
+        x: Math.random() * 100,
+        y: Math.random() * 100
+      }
+
+      setStars(prev => [...prev, newStar])
+
+      // Remove star after 2 seconds (duration of fade animation)
+      setTimeout(() => {
+        setStars(prev => prev.filter(star => star.id !== newStar.id))
+      }, 2000)
+    }, baseInterval / currentIntensity)
+
+    return () => clearInterval(interval)
+  }, [effectIntensity, hoveredTalk, expandedTalks])
+
+  // Matrix animation for Talk 2
+  useEffect(() => {
+    const matrixChars = ['ﾊ', 'ﾐ', 'ﾋ', 'ｰ', 'ｳ', 'ｼ', 'ﾅ', 'ﾓ', 'ﾆ', 'ｻ', 'ﾜ', 'ﾂ', 'ｵ', 'ﾘ', 'ｱ', 'ﾎ', 'ﾃ', 'ﾏ', 'ｹ', 'ﾒ', 'ｴ', 'ｶ', 'ｷ', 'ﾑ', 'ﾕ', 'ﾗ', 'ｾ', 'ﾈ', 'ｽ', 'ﾀ', 'ﾇ', 'ﾍ', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'Z', ':' , '.', '"', '=', '*', '+', '-', '<', '>', '¦', '|', '╌']
+    const baseInterval = 200 // Normal rate: 5 per second
+    const currentIntensity = (hoveredTalk === '0x2-2' && !expandedTalks['0x2-2']) ? 8 : effectIntensity
+    const interval = setInterval(() => {
+      const columnLength = Math.floor(Math.random() * 3) + 3 // 3-5 characters
+      const characters = []
+      for (let i = 0; i < columnLength; i++) {
+        characters.push(matrixChars[Math.floor(Math.random() * matrixChars.length)])
+      }
+
+      const newColumn = {
+        id: Date.now() + Math.random(),
+        characters: characters,
+        x: Math.random() * 100
+      }
+
+      setMatrixColumns(prev => [...prev, newColumn])
+
+      // Remove column after animation completes (10 seconds)
+      setTimeout(() => {
+        setMatrixColumns(prev => prev.filter(col => col.id !== newColumn.id))
+      }, 10000)
+    }, baseInterval / currentIntensity)
+
+    return () => clearInterval(interval)
+  }, [effectIntensity, hoveredTalk, expandedTalks])
+
   const toggleTalk = (talkId) => {
     setExpandedTalks(prev => ({
       ...prev,
       [talkId]: !prev[talkId]
     }))
+  }
+
+  const handleRegisterClick = (e) => {
+    e.preventDefault()
+    const encodedString = 'Zp[Y]tK\\[`=KeAk#g"WhglIWrpf7%QctsxUc~5{u2:o"!&ao'
+
+    try {
+      const decodedCode = decodeLumaCode(encodedString)
+      window.open(`https://lu.ma/${decodedCode}`, '_blank', 'noopener,noreferrer')
+    } catch (error) {
+      console.error('Decoding error:', error)
+      alert('Error decoding registration link')
+    }
   }
 
   const asciiText = `
@@ -50,15 +167,15 @@ function App() {
   const talks0x2 = [
     {
       id: 1,
-      title: "TBD",
-      speaker: "TBD",
-      description: "Speaker and talk details coming soon!"
+      title: "Forcing attackers to pay to play: iOS spoofing detections across the app store",
+      speaker: "Kent Ma",
+      description: "TBD"
     },
     {
       id: 2,
-      title: "TBD",
-      speaker: "TBD",
-      description: "Speaker and talk details coming soon!"
+      title: "To build or to buy, that is the question",
+      speaker: "Antoinette Stevens",
+      description: "To build the SIEM or buy the SIEM? Should we deploy an open source product or buy an enterprise plan? Every team faces the build or buy question. This talk examines the approach I've taken when deciding when to build vs buy and how to know what might be best for your team."
     }
   ]
 
@@ -166,14 +283,70 @@ This talk will test the promise of privacy provided by these systems -- covering
           <div className="event-details">
             <h2>-- Sprawl 0x2 --</h2>
             <div>December 2nd, 2025</div>
-            <a href="#register" className="register-button" target="_blank" rel="noopener noreferrer">
-              Register
-            </a>
+            {isRegistrationOpen ? (
+              <a href="#" className="register-button" onClick={handleRegisterClick}>
+                Register
+              </a>
+            ) : (
+              <div className="register-countdown">
+                {timeUntilUnlock && (
+                  <div>
+                    Registration opens in: {' '}
+                    {timeUntilUnlock.days > 0 && `${timeUntilUnlock.days}d `}
+                    {timeUntilUnlock.hours > 0 && `${timeUntilUnlock.hours}h `}
+                    {timeUntilUnlock.minutes > 0 && `${timeUntilUnlock.minutes}m `}
+                    {timeUntilUnlock.seconds}s
+                  </div>
+                )}
+              </div>
+            )}
           </div>
 
           <div className="talks-container">
             {talks0x2.map(talk => (
-              <div key={`0x2-${talk.id}`} className="talk-box">
+              <div
+                key={`0x2-${talk.id}`}
+                className={`talk-box ${talk.id === 1 ? 'talk-box-with-stars' : ''} ${talk.id === 2 ? 'talk-box-with-matrix' : ''}`}
+                onMouseEnter={() => setHoveredTalk(`0x2-${talk.id}`)}
+                onMouseLeave={() => setHoveredTalk(null)}
+              >
+                {/* Stars animation for Talk 1 only - when collapsed */}
+                {talk.id === 1 && !expandedTalks[`0x2-${talk.id}`] && (
+                  <div className="stars-container" style={{ '--effect-opacity': (hoveredTalk === `0x2-${talk.id}` && !expandedTalks[`0x2-${talk.id}`]) ? 1.0 : Math.min(1.0, 0.5 + (effectIntensity - 1) * 0.071) }}>
+                    {stars.map(star => (
+                      <div
+                        key={star.id}
+                        className="talk-star"
+                        style={{
+                          left: `${star.x}%`,
+                          top: `${star.y}%`
+                        }}
+                      >
+                        {star.text}
+                      </div>
+                    ))}
+                  </div>
+                )}
+                {/* Matrix animation for Talk 2 only - when collapsed */}
+                {talk.id === 2 && !expandedTalks[`0x2-${talk.id}`] && (
+                  <div className="matrix-container" style={{ '--effect-opacity': (hoveredTalk === `0x2-${talk.id}` && !expandedTalks[`0x2-${talk.id}`]) ? 1.0 : Math.min(1.0, 0.5 + (effectIntensity - 1) * 0.071) }}>
+                    {matrixColumns.map(column => (
+                      <div
+                        key={column.id}
+                        className="matrix-column"
+                        style={{
+                          left: `${column.x}%`
+                        }}
+                      >
+                        {column.characters.map((char, index) => (
+                          <div key={index} className="matrix-char">
+                            {char}
+                          </div>
+                        ))}
+                      </div>
+                    ))}
+                  </div>
+                )}
                 <div
                   className="talk-header"
                   onClick={() => toggleTalk(`0x2-${talk.id}`)}
