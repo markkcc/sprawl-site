@@ -169,7 +169,7 @@ function App() {
       id: 1,
       title: "Forcing attackers to pay to play: iOS spoofing detections across the app store",
       speaker: "Kent Ma",
-      description: "TBD"
+      description: "This talk focuses on ways of breaking economic incentives of large-scale mobile app fraud by verifying mobile client authenticity and forcing attackers to own and rotate more physical hardware.\n\nIt describes lessons learned on a large mobile app from operating hardware attestation, App Attest framework, jailbreak detection, and device banning."
     },
     {
       id: 2,
