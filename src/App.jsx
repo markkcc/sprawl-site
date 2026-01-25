@@ -86,7 +86,7 @@ function App() {
   useEffect(() => {
     const starChars = ['*', '+', '.', '·', '✷', '✶', '✵', '✸', '✧', '✦']
     const baseInterval = 333 // Normal rate: 3 per second
-    const currentIntensity = (hoveredTalk === '0x2-1' && !expandedTalks['0x2-1']) ? 8 : effectIntensity
+    const currentIntensity = (hoveredTalk === '0x3-1' && !expandedTalks['0x3-1']) ? 8 : effectIntensity
     const interval = setInterval(() => {
       const newStar = {
         id: Date.now() + Math.random(),
@@ -110,7 +110,7 @@ function App() {
   useEffect(() => {
     const matrixChars = ['ﾊ', 'ﾐ', 'ﾋ', 'ｰ', 'ｳ', 'ｼ', 'ﾅ', 'ﾓ', 'ﾆ', 'ｻ', 'ﾜ', 'ﾂ', 'ｵ', 'ﾘ', 'ｱ', 'ﾎ', 'ﾃ', 'ﾏ', 'ｹ', 'ﾒ', 'ｴ', 'ｶ', 'ｷ', 'ﾑ', 'ﾕ', 'ﾗ', 'ｾ', 'ﾈ', 'ｽ', 'ﾀ', 'ﾇ', 'ﾍ', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'Z', ':' , '.', '"', '=', '*', '+', '-', '<', '>', '¦', '|', '╌']
     const baseInterval = 200 // Normal rate: 5 per second
-    const currentIntensity = (hoveredTalk === '0x2-2' && !expandedTalks['0x2-2']) ? 8 : effectIntensity
+    const currentIntensity = (hoveredTalk === '0x3-2' && !expandedTalks['0x3-2']) ? 8 : effectIntensity
     const interval = setInterval(() => {
       const columnLength = Math.floor(Math.random() * 3) + 3 // 3-5 characters
       const characters = []
@@ -144,15 +144,7 @@ function App() {
 
   const handleRegisterClick = (e) => {
     e.preventDefault()
-    const encodedString = 'Zp[Y]tK\\[`=KeAk#g"WhglIWrpf7%QctsxUc~5{u2:o"!&ao'
-
-    try {
-      const decodedCode = decodeLumaCode(encodedString)
-      window.open(`https://lu.ma/${decodedCode}`, '_blank', 'noopener,noreferrer')
-    } catch (error) {
-      console.error('Decoding error:', error)
-      alert('Error decoding registration link')
-    }
+    window.open('https://luma.com/j2qicm35', '_blank', 'noopener,noreferrer')
   }
 
   const asciiText = `
@@ -164,17 +156,38 @@ function App() {
     |_|
 `
 
+  const talks0x3 = [
+    {
+      id: 1,
+      title: "Dill With It: Pickle Exploitation Techniques And Their Detection Using SaferPickle",
+      speaker: "Andrew Johnston and George Litvinov, Google",
+      description: `Python's pickle format is a security minefield, yet it remains a cornerstone of modern AI/ML and data science workflows. While its dangers are well-known, the effectiveness of existing open-source scanners against sophisticated attacks has remained largely unexamined.
+
+In this talk we introduce five novel bypass techniques to defeat popular open-source scanners like Fickling, Modelscan and Picklescan. We will demonstrate how these tools can be tricked into classifying overtly malicious pickles as safe.
+
+To combat these threats, we propose SaferPickle, a new open-source library. This library enhances the pickle format's security at runtime through transparent hardening. We will present its robust, multi-layered scanning engine, which integrates behavioral analysis, direct opcode inspection, and an intelligent module resolution system capable of securely reconstructing malicious calls from fragmented code.
+
+Finally, we'll share our journey of deploying SaferPickle to protect ML workloads at Google and integrating it as the first-ever pickle scanner in VirusTotal. Attendees will leave with knowledge of bypass techniques, a new open-source tool and experience of how to harden the ML supply chain against one of its most persistent threats.`
+    },
+    {
+      id: 2,
+      title: "Negative Space: a JTW continuation project",
+      speaker: "Alice Bibaud",
+      description: "TBD"
+    }
+  ]
+
   const talks0x2 = [
     {
       id: 1,
       title: "Forcing attackers to pay to play: iOS spoofing detections across the app store",
-      speaker: "Kent Ma",
+      speaker: "Kent Ma, Uber",
       description: "This talk focuses on ways of breaking economic incentives of large-scale mobile app fraud by verifying mobile client authenticity and forcing attackers to own and rotate more physical hardware.\n\nIt describes lessons learned on a large mobile app from operating hardware attestation, App Attest framework, jailbreak detection, and device banning."
     },
     {
       id: 2,
       title: "To build or to buy, that is the question",
-      speaker: "Antoinette Stevens",
+      speaker: "Antoinette Stevens, Ramp",
       description: "To build the SIEM or buy the SIEM? Should we deploy an open source product or buy an enterprise plan? Every team faces the build or buy question. This talk examines the approach I've taken when deciding when to build vs buy and how to know what might be best for your team."
     }
   ]
@@ -183,13 +196,13 @@ function App() {
     {
       id: 1,
       title: "A Secret Talk about macOS Detection Engineering",
-      speaker: "Olivia Gallucci",
+      speaker: "Olivia Gallucci, DataDog",
       description: "This talk examines macOS telemetry sources (Unified Logging System, Endpoint Security, and TCC.db) and methods for extracting signals. It analyzes abuse of automation utilities in infostealers, highlighting common methods of persistence and credential-theft. Detection strategies focus on behavioral correlations, and how they can be visualized through open-source tooling."
     },
     {
       id: 2,
       title: "Your Apes May Be Gone, But the Hackers Made $9 Billion and They're Still Here",
-      speaker: "Andrew MacPherson",
+      speaker: "Andrew MacPherson, Privy",
       description: `Last year, crypto thefts hit $9.32 billion—more than half of all cybercrime losses. North Korea just pulled off a $1.5 billion heist from a single exchange. Meanwhile, most security professionals still think crypto is just magic internet money for buying NFT monkeys.
 
 This talk is for the crypto-skeptical security professional who's tired of hearing about "blockchain". I'll show you why crypto security is 90% the same Web2 skills you already have—phishing, social engineering, API abuse—just with irreversible consequences and way better attacker ROI.
@@ -210,7 +223,7 @@ Key Takeaways:
     {
       id: 3,
       title: "Confidential To Compromised: A Deep Dive Into Private LLMs",
-      speaker: "Aman Ali",
+      speaker: "Aman Ali, Meta",
       description: `Private LLMs are emerging across the tech landscape, starting with Apple's PCC, then GCP/Azure's Confidential AI Cloud offerings, and Whatsapps Private Processing products. These systems promise a secure LLM you can verifiably send your most sensitive information to, and often draw parallels to e2ee messaging systems like Signal or WhatsApp. However, one end of this connection is always decrypted in a server somewhere and is subject to undetectable law enforcement, hackers and curious insiders. How far do the technologies underpinning these systems actually go, and what does it take to turn your upcoming AI confidant into a backdoor into your phone's data?
 
 This talk will test the promise of privacy provided by these systems -- covering confidentiality, non-targetability, and verifiable transparency offered through TEEs, OHTTP and binary transparency logs.`
@@ -268,7 +281,7 @@ This talk will test the promise of privacy provided by these systems -- covering
           </pre>
         )}
         <div className="text-line">
-          nyc - cybersecurity - 2025
+          nyc - cybersecurity - 2026
         </div>
 
         {/* New content from README */}
@@ -279,10 +292,10 @@ This talk will test the promise of privacy provided by these systems -- covering
             <div>Hosted every two months.</div>
           </div>
 
-          {/* Sprawl 0x2 Section */}
+          {/* Sprawl 0x3 Section */}
           <div className="event-details">
-            <h2>-- Sprawl 0x2 --</h2>
-            <div>December 2nd, 2025</div>
+            <h2>-- Sprawl 0x3 --</h2>
+            <div>February 5th, 2026</div>
             {isRegistrationOpen ? (
               <a href="#" className="register-button" onClick={handleRegisterClick}>
                 Register
@@ -303,16 +316,16 @@ This talk will test the promise of privacy provided by these systems -- covering
           </div>
 
           <div className="talks-container">
-            {talks0x2.map(talk => (
+            {talks0x3.map(talk => (
               <div
-                key={`0x2-${talk.id}`}
+                key={`0x3-${talk.id}`}
                 className={`talk-box ${talk.id === 1 ? 'talk-box-with-stars' : ''} ${talk.id === 2 ? 'talk-box-with-matrix' : ''}`}
-                onMouseEnter={() => setHoveredTalk(`0x2-${talk.id}`)}
+                onMouseEnter={() => setHoveredTalk(`0x3-${talk.id}`)}
                 onMouseLeave={() => setHoveredTalk(null)}
               >
                 {/* Stars animation for Talk 1 only - when collapsed */}
-                {talk.id === 1 && !expandedTalks[`0x2-${talk.id}`] && (
-                  <div className="stars-container" style={{ '--effect-opacity': (hoveredTalk === `0x2-${talk.id}` && !expandedTalks[`0x2-${talk.id}`]) ? 1.0 : Math.min(1.0, 0.5 + (effectIntensity - 1) * 0.071) }}>
+                {talk.id === 1 && !expandedTalks[`0x3-${talk.id}`] && (
+                  <div className="stars-container" style={{ '--effect-opacity': (hoveredTalk === `0x3-${talk.id}` && !expandedTalks[`0x3-${talk.id}`]) ? 1.0 : Math.min(1.0, 0.5 + (effectIntensity - 1) * 0.071) }}>
                     {stars.map(star => (
                       <div
                         key={star.id}
@@ -328,8 +341,8 @@ This talk will test the promise of privacy provided by these systems -- covering
                   </div>
                 )}
                 {/* Matrix animation for Talk 2 only - when collapsed */}
-                {talk.id === 2 && !expandedTalks[`0x2-${talk.id}`] && (
-                  <div className="matrix-container" style={{ '--effect-opacity': (hoveredTalk === `0x2-${talk.id}` && !expandedTalks[`0x2-${talk.id}`]) ? 1.0 : Math.min(1.0, 0.5 + (effectIntensity - 1) * 0.071) }}>
+                {talk.id === 2 && !expandedTalks[`0x3-${talk.id}`] && (
+                  <div className="matrix-container" style={{ '--effect-opacity': (hoveredTalk === `0x3-${talk.id}` && !expandedTalks[`0x3-${talk.id}`]) ? 1.0 : Math.min(1.0, 0.5 + (effectIntensity - 1) * 0.071) }}>
                     {matrixColumns.map(column => (
                       <div
                         key={column.id}
@@ -349,17 +362,17 @@ This talk will test the promise of privacy provided by these systems -- covering
                 )}
                 <div
                   className="talk-header"
-                  onClick={() => toggleTalk(`0x2-${talk.id}`)}
+                  onClick={() => toggleTalk(`0x3-${talk.id}`)}
                 >
                   <span className="toggle-icon">
-                    [ {expandedTalks[`0x2-${talk.id}`] ? '-' : '+'} ]
+                    [ {expandedTalks[`0x3-${talk.id}`] ? '-' : '+'} ]
                   </span>
                   <div className="talk-info">
                     <div className="talk-title">Talk {talk.id}: {talk.title}</div>
                     <div className="talk-speaker">{talk.speaker}</div>
                   </div>
                 </div>
-                {expandedTalks[`0x2-${talk.id}`] && (
+                {expandedTalks[`0x3-${talk.id}`] && (
                   <div className="talk-description">
                     {talk.description.split('\n\n').map((paragraph, index) => (
                       <p key={index} style={{ marginBottom: '1em' }}>
@@ -386,9 +399,44 @@ This talk will test the promise of privacy provided by these systems -- covering
 
             {olderEventsExpanded && (
               <div className="older-events-content">
+                {/* Sprawl 0x2 */}
+                <div className="event-details">
+                  <h2>-- Sprawl 0x2 --</h2>
+                  <div>December 2nd, 2025 @ DataDog</div>
+                </div>
+
+                <div className="talks-container">
+                  {talks0x2.map(talk => (
+                    <div key={`0x2-${talk.id}`} className="talk-box">
+                      <div
+                        className="talk-header"
+                        onClick={() => toggleTalk(`0x2-${talk.id}`)}
+                      >
+                        <span className="toggle-icon">
+                          [ {expandedTalks[`0x2-${talk.id}`] ? '-' : '+'} ]
+                        </span>
+                        <div className="talk-info">
+                          <div className="talk-title">Talk {talk.id}: {talk.title}</div>
+                          <div className="talk-speaker">{talk.speaker}</div>
+                        </div>
+                      </div>
+                      {expandedTalks[`0x2-${talk.id}`] && (
+                        <div className="talk-description">
+                          {talk.description.split('\n\n').map((paragraph, index) => (
+                            <p key={index} style={{ marginBottom: '1em' }}>
+                              {paragraph}
+                            </p>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+
+                {/* Sprawl 0x1 */}
                 <div className="event-details">
                   <h2>-- Sprawl 0x1 --</h2>
-                  <div>October 2nd, 2025</div>
+                  <div>October 2nd, 2025 @ Oscar Health</div>
                 </div>
 
                 <div className="talks-container">
