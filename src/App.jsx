@@ -312,7 +312,7 @@ This talk will test the promise of privacy provided by these systems -- covering
           {/* Sprawl 0x4 Section */}
           <div className="event-details">
             <h2>-- Sprawl 0x4 --</h2>
-            <div>April 2nd, 2026</div>
+            <div>April 7th, 2026</div>
             {isRegistrationOpen ? (
               <a href="#" className="register-button" onClick={handleRegisterClick}>
                 Register
