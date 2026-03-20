@@ -144,7 +144,7 @@ function App() {
 
   const handleRegisterClick = (e) => {
     e.preventDefault()
-    window.open('https://luma.com/j2qicm35', '_blank', 'noopener,noreferrer')
+    window.open('https://luma.com/x8bqsmr4', '_blank', 'noopener,noreferrer')
   }
 
   const asciiText = `
