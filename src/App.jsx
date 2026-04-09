@@ -11,7 +11,7 @@ function App() {
   const [matrixColumns, setMatrixColumns] = useState([])
   const [effectIntensity, setEffectIntensity] = useState(8) // Start at 8x intensity
   const [hoveredTalk, setHoveredTalk] = useState(null)
-  const [registrationUnlockTime] = useState(new Date('2025-11-25T18:00:00-05:00'))
+  const [registrationUnlockTime] = useState(new Date('2026-05-15T18:00:00-04:00'))
   const [timeUntilUnlock, setTimeUntilUnlock] = useState(null)
   const [isRegistrationOpen, setIsRegistrationOpen] = useState(false)
 
@@ -156,6 +156,21 @@ function App() {
     |_|
 `
 
+  const talks0x5 = [
+    {
+      id: 1,
+      title: "TBD",
+      speaker: "TBD",
+      description: "TBD"
+    },
+    {
+      id: 2,
+      title: "5-min Lightning Talks!",
+      speaker: "You!",
+      description: "Many smart people attend Sprawl, and we want to hear more from them. So we are hosting a round of lightning talks. Limited to 5 minutes per talk (which is challenging! you only have time for two and a half sentences!)"
+    }
+  ]
+
   const talks0x4 = [
     {
       id: 1,
@@ -167,7 +182,9 @@ function App() {
       id: 2,
       title: "Design for Security",
       speaker: "Serena Chen, Google",
-      description: `There's a misconception that security is a niche for masterminds. In the real world, most security breaches don't come from 0days or neat hacks. In fact, most errors are human—simple scams that have worked since society began.
+      description: `__SLIDES__https://docs.google.com/presentation/d/1zU1-nhfJxh2fd2ggrGLNCkf8K27FDCxmOZAAAj2PsL0/
+
+There's a misconception that security is a niche for masterminds. In the real world, most security breaches don't come from 0days or neat hacks. In fact, most errors are human—simple scams that have worked since society began.
 
 This is where UX design fills a missed opportunity. Good user experience design is necessary for good security. We can craft paths of least resistance that match paths of most security. We can educate our users on what is good practice and what is security theater. We can build secure flows that are usable, not obstructive or annoying. A better world is possible!!!`
     }
@@ -309,10 +326,10 @@ This talk will test the promise of privacy provided by these systems -- covering
             <div>Hosted every two months.</div>
           </div>
 
-          {/* Sprawl 0x4 Section */}
+          {/* Sprawl 0x5 Section */}
           <div className="event-details">
-            <h2>-- Sprawl 0x4 --</h2>
-            <div>April 2nd, 2026</div>
+            <h2>-- Sprawl 0x5 --</h2>
+            <div>June, 2026</div>
             {isRegistrationOpen ? (
               <a href="#" className="register-button" onClick={handleRegisterClick}>
                 Register
@@ -333,16 +350,16 @@ This talk will test the promise of privacy provided by these systems -- covering
           </div>
 
           <div className="talks-container">
-            {talks0x4.map(talk => (
+            {talks0x5.map(talk => (
               <div
-                key={`0x4-${talk.id}`}
+                key={`0x5-${talk.id}`}
                 className={`talk-box ${talk.id === 1 ? 'talk-box-with-stars' : ''} ${talk.id === 2 ? 'talk-box-with-matrix' : ''}`}
-                onMouseEnter={() => setHoveredTalk(`0x4-${talk.id}`)}
+                onMouseEnter={() => setHoveredTalk(`0x5-${talk.id}`)}
                 onMouseLeave={() => setHoveredTalk(null)}
               >
                 {/* Stars animation for Talk 1 only - when collapsed */}
-                {talk.id === 1 && !expandedTalks[`0x4-${talk.id}`] && (
-                  <div className="stars-container" style={{ '--effect-opacity': (hoveredTalk === `0x4-${talk.id}` && !expandedTalks[`0x4-${talk.id}`]) ? 1.0 : Math.min(1.0, 0.5 + (effectIntensity - 1) * 0.071) }}>
+                {talk.id === 1 && !expandedTalks[`0x5-${talk.id}`] && (
+                  <div className="stars-container" style={{ '--effect-opacity': (hoveredTalk === `0x5-${talk.id}` && !expandedTalks[`0x5-${talk.id}`]) ? 1.0 : Math.min(1.0, 0.5 + (effectIntensity - 1) * 0.071) }}>
                     {stars.map(star => (
                       <div
                         key={star.id}
@@ -358,8 +375,8 @@ This talk will test the promise of privacy provided by these systems -- covering
                   </div>
                 )}
                 {/* Matrix animation for Talk 2 only - when collapsed */}
-                {talk.id === 2 && !expandedTalks[`0x4-${talk.id}`] && (
-                  <div className="matrix-container" style={{ '--effect-opacity': (hoveredTalk === `0x4-${talk.id}` && !expandedTalks[`0x4-${talk.id}`]) ? 1.0 : Math.min(1.0, 0.5 + (effectIntensity - 1) * 0.071) }}>
+                {talk.id === 2 && !expandedTalks[`0x5-${talk.id}`] && (
+                  <div className="matrix-container" style={{ '--effect-opacity': (hoveredTalk === `0x5-${talk.id}` && !expandedTalks[`0x5-${talk.id}`]) ? 1.0 : Math.min(1.0, 0.5 + (effectIntensity - 1) * 0.071) }}>
                     {matrixColumns.map(column => (
                       <div
                         key={column.id}
@@ -379,17 +396,17 @@ This talk will test the promise of privacy provided by these systems -- covering
                 )}
                 <div
                   className="talk-header"
-                  onClick={() => toggleTalk(`0x4-${talk.id}`)}
+                  onClick={() => toggleTalk(`0x5-${talk.id}`)}
                 >
                   <span className="toggle-icon">
-                    [ {expandedTalks[`0x4-${talk.id}`] ? '-' : '+'} ]
+                    [ {expandedTalks[`0x5-${talk.id}`] ? '-' : '+'} ]
                   </span>
                   <div className="talk-info">
                     <div className="talk-title">Talk {talk.id}: {talk.title}</div>
                     <div className="talk-speaker">{talk.speaker}</div>
                   </div>
                 </div>
-                {expandedTalks[`0x4-${talk.id}`] && (
+                {expandedTalks[`0x5-${talk.id}`] && (
                   <div className="talk-description">
                     {talk.description.split('\n\n').map((paragraph, index) => (
                       <p key={index} style={{ marginBottom: '1em' }}>
@@ -416,10 +433,54 @@ This talk will test the promise of privacy provided by these systems -- covering
 
             {olderEventsExpanded && (
               <div className="older-events-content">
+                {/* Sprawl 0x4 */}
+                <div className="event-details">
+                  <h2>-- Sprawl 0x4 --</h2>
+                  <div>April 2nd, 2026 @ Figma</div>
+                </div>
+
+                <div className="talks-container">
+                  {talks0x4.map(talk => (
+                    <div key={`0x4-${talk.id}`} className="talk-box">
+                      <div
+                        className="talk-header"
+                        onClick={() => toggleTalk(`0x4-${talk.id}`)}
+                      >
+                        <span className="toggle-icon">
+                          [ {expandedTalks[`0x4-${talk.id}`] ? '-' : '+'} ]
+                        </span>
+                        <div className="talk-info">
+                          <div className="talk-title">Talk {talk.id}: {talk.title}</div>
+                          <div className="talk-speaker">{talk.speaker}</div>
+                        </div>
+                      </div>
+                      {expandedTalks[`0x4-${talk.id}`] && (
+                        <div className="talk-description">
+                          {talk.description.split('\n\n').map((paragraph, index) => {
+                            if (paragraph.startsWith('__SLIDES__')) {
+                              const url = paragraph.replace('__SLIDES__', '')
+                              return (
+                                <p key={index} style={{ marginBottom: '1em', color: 'fuchsia' }}>
+                                  Link to Slides: <a href={url} target="_blank" rel="noopener noreferrer" style={{ color: 'fuchsia' }}>{url}</a>
+                                </p>
+                              )
+                            }
+                            return (
+                              <p key={index} style={{ marginBottom: '1em' }}>
+                                {paragraph}
+                              </p>
+                            )
+                          })}
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+
                 {/* Sprawl 0x3 */}
                 <div className="event-details">
                   <h2>-- Sprawl 0x3 --</h2>
-                  <div>February 5th, 2026</div>
+                  <div>February 5th, 2026 @ Spotify</div>
                 </div>
 
                 <div className="talks-container">
