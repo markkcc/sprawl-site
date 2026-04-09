@@ -436,7 +436,7 @@ This talk will test the promise of privacy provided by these systems -- covering
                 {/* Sprawl 0x4 */}
                 <div className="event-details">
                   <h2>-- Sprawl 0x4 --</h2>
-                  <div>April 2nd, 2026 @ Figma</div>
+                  <div>April 7th, 2026 @ Figma</div>
                 </div>
 
                 <div className="talks-container">
