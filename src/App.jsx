@@ -144,7 +144,7 @@ function App() {
 
   const handleRegisterClick = (e) => {
     e.preventDefault()
-    window.open('https://luma.com/x8bqsmr4', '_blank', 'noopener,noreferrer')
+    window.open('https://luma.com/b1tb1ha4', '_blank', 'noopener,noreferrer')
   }
 
   const asciiText = `
@@ -159,12 +159,6 @@ function App() {
   const talks0x5 = [
     {
       id: 1,
-      title: "TBD",
-      speaker: "TBD",
-      description: "TBD"
-    },
-    {
-      id: 2,
       title: "5-min Lightning Talks!",
       speaker: "You!",
       description: "Many smart people attend Sprawl, and we want to hear more from them. So we are hosting a round of lightning talks. Limited to 5 minutes per talk (which is challenging! you only have time for two and a half sentences!)"
@@ -329,7 +323,7 @@ This talk will test the promise of privacy provided by these systems -- covering
           {/* Sprawl 0x5 Section */}
           <div className="event-details">
             <h2>-- Sprawl 0x5 --</h2>
-            <div>June, 2026</div>
+            <div>June 4th, 2026 @ Etsy</div>
             {isRegistrationOpen ? (
               <a href="#" className="register-button" onClick={handleRegisterClick}>
                 Register
@@ -402,7 +396,7 @@ This talk will test the promise of privacy provided by these systems -- covering
                     [ {expandedTalks[`0x5-${talk.id}`] ? '-' : '+'} ]
                   </span>
                   <div className="talk-info">
-                    <div className="talk-title">Talk {talk.id}: {talk.title}</div>
+                    <div className="talk-title">{talk.title}</div>
                     <div className="talk-speaker">{talk.speaker}</div>
                   </div>
                 </div>
