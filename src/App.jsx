@@ -86,7 +86,7 @@ function App() {
   useEffect(() => {
     const starChars = ['*', '+', '.', '·', '✷', '✶', '✵', '✸', '✧', '✦']
     const baseInterval = 333 // Normal rate: 3 per second
-    const currentIntensity = (hoveredTalk === '0x4-1' && !expandedTalks['0x4-1']) ? 8 : effectIntensity
+    const currentIntensity = (hoveredTalk === '0x6-1' && !expandedTalks['0x6-1']) ? 8 : effectIntensity
     const interval = setInterval(() => {
       const newStar = {
         id: Date.now() + Math.random(),
@@ -110,7 +110,7 @@ function App() {
   useEffect(() => {
     const matrixChars = ['ﾊ', 'ﾐ', 'ﾋ', 'ｰ', 'ｳ', 'ｼ', 'ﾅ', 'ﾓ', 'ﾆ', 'ｻ', 'ﾜ', 'ﾂ', 'ｵ', 'ﾘ', 'ｱ', 'ﾎ', 'ﾃ', 'ﾏ', 'ｹ', 'ﾒ', 'ｴ', 'ｶ', 'ｷ', 'ﾑ', 'ﾕ', 'ﾗ', 'ｾ', 'ﾈ', 'ｽ', 'ﾀ', 'ﾇ', 'ﾍ', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'Z', ':' , '.', '"', '=', '*', '+', '-', '<', '>', '¦', '|', '╌']
     const baseInterval = 200 // Normal rate: 5 per second
-    const currentIntensity = (hoveredTalk === '0x4-2' && !expandedTalks['0x4-2']) ? 8 : effectIntensity
+    const currentIntensity = (hoveredTalk === '0x6-2' && !expandedTalks['0x6-2']) ? 8 : effectIntensity
     const interval = setInterval(() => {
       const columnLength = Math.floor(Math.random() * 3) + 3 // 3-5 characters
       const characters = []
@@ -144,7 +144,7 @@ function App() {
 
   const handleRegisterClick = (e) => {
     e.preventDefault()
-    window.open('https://luma.com/b1tb1ha4', '_blank', 'noopener,noreferrer')
+    window.open('https://luma.com/sdxk93le', '_blank', 'noopener,noreferrer')
   }
 
   const asciiText = `
@@ -155,6 +155,21 @@ function App() {
 |___/ .__/|_|  \\__,_| \\_/\\_/ |_|
     |_|
 `
+
+  const talks0x6 = [
+    {
+      id: 1,
+      title: "TBD",
+      speaker: "TBD",
+      description: "TBD"
+    },
+    {
+      id: 2,
+      title: "TBD",
+      speaker: "TBD",
+      description: "TBD"
+    }
+  ]
 
   const talks0x5 = [
     {
@@ -320,10 +335,10 @@ This talk will test the promise of privacy provided by these systems -- covering
             <div>Hosted every two months.</div>
           </div>
 
-          {/* Sprawl 0x5 Section */}
+          {/* Sprawl 0x6 Section */}
           <div className="event-details">
-            <h2>-- Sprawl 0x5 --</h2>
-            <div>June 4th, 2026 @ Etsy</div>
+            <h2>-- Sprawl 0x6 --</h2>
+            <div>August 18th, 2026 @ CLEAR</div>
             {isRegistrationOpen ? (
               <a href="#" className="register-button" onClick={handleRegisterClick}>
                 Register
@@ -344,16 +359,16 @@ This talk will test the promise of privacy provided by these systems -- covering
           </div>
 
           <div className="talks-container">
-            {talks0x5.map(talk => (
+            {talks0x6.map(talk => (
               <div
-                key={`0x5-${talk.id}`}
+                key={`0x6-${talk.id}`}
                 className={`talk-box ${talk.id === 1 ? 'talk-box-with-stars' : ''} ${talk.id === 2 ? 'talk-box-with-matrix' : ''}`}
-                onMouseEnter={() => setHoveredTalk(`0x5-${talk.id}`)}
+                onMouseEnter={() => setHoveredTalk(`0x6-${talk.id}`)}
                 onMouseLeave={() => setHoveredTalk(null)}
               >
                 {/* Stars animation for Talk 1 only - when collapsed */}
-                {talk.id === 1 && !expandedTalks[`0x5-${talk.id}`] && (
-                  <div className="stars-container" style={{ '--effect-opacity': (hoveredTalk === `0x5-${talk.id}` && !expandedTalks[`0x5-${talk.id}`]) ? 1.0 : Math.min(1.0, 0.5 + (effectIntensity - 1) * 0.071) }}>
+                {talk.id === 1 && !expandedTalks[`0x6-${talk.id}`] && (
+                  <div className="stars-container" style={{ '--effect-opacity': (hoveredTalk === `0x6-${talk.id}` && !expandedTalks[`0x6-${talk.id}`]) ? 1.0 : Math.min(1.0, 0.5 + (effectIntensity - 1) * 0.071) }}>
                     {stars.map(star => (
                       <div
                         key={star.id}
@@ -369,8 +384,8 @@ This talk will test the promise of privacy provided by these systems -- covering
                   </div>
                 )}
                 {/* Matrix animation for Talk 2 only - when collapsed */}
-                {talk.id === 2 && !expandedTalks[`0x5-${talk.id}`] && (
-                  <div className="matrix-container" style={{ '--effect-opacity': (hoveredTalk === `0x5-${talk.id}` && !expandedTalks[`0x5-${talk.id}`]) ? 1.0 : Math.min(1.0, 0.5 + (effectIntensity - 1) * 0.071) }}>
+                {talk.id === 2 && !expandedTalks[`0x6-${talk.id}`] && (
+                  <div className="matrix-container" style={{ '--effect-opacity': (hoveredTalk === `0x6-${talk.id}` && !expandedTalks[`0x6-${talk.id}`]) ? 1.0 : Math.min(1.0, 0.5 + (effectIntensity - 1) * 0.071) }}>
                     {matrixColumns.map(column => (
                       <div
                         key={column.id}
@@ -390,17 +405,17 @@ This talk will test the promise of privacy provided by these systems -- covering
                 )}
                 <div
                   className="talk-header"
-                  onClick={() => toggleTalk(`0x5-${talk.id}`)}
+                  onClick={() => toggleTalk(`0x6-${talk.id}`)}
                 >
                   <span className="toggle-icon">
-                    [ {expandedTalks[`0x5-${talk.id}`] ? '-' : '+'} ]
+                    [ {expandedTalks[`0x6-${talk.id}`] ? '-' : '+'} ]
                   </span>
                   <div className="talk-info">
-                    <div className="talk-title">{talk.title}</div>
+                    <div className="talk-title">Talk {talk.id}: {talk.title}</div>
                     <div className="talk-speaker">{talk.speaker}</div>
                   </div>
                 </div>
-                {expandedTalks[`0x5-${talk.id}`] && (
+                {expandedTalks[`0x6-${talk.id}`] && (
                   <div className="talk-description">
                     {talk.description.split('\n\n').map((paragraph, index) => (
                       <p key={index} style={{ marginBottom: '1em' }}>
@@ -427,6 +442,40 @@ This talk will test the promise of privacy provided by these systems -- covering
 
             {olderEventsExpanded && (
               <div className="older-events-content">
+                {/* Sprawl 0x5 */}
+                <div className="event-details">
+                  <h2>-- Sprawl 0x5 --</h2>
+                  <div>June 4th, 2026 @ Etsy</div>
+                </div>
+
+                <div className="talks-container">
+                  {talks0x5.map(talk => (
+                    <div key={`0x5-${talk.id}`} className="talk-box">
+                      <div
+                        className="talk-header"
+                        onClick={() => toggleTalk(`0x5-${talk.id}`)}
+                      >
+                        <span className="toggle-icon">
+                          [ {expandedTalks[`0x5-${talk.id}`] ? '-' : '+'} ]
+                        </span>
+                        <div className="talk-info">
+                          <div className="talk-title">{talk.title}</div>
+                          <div className="talk-speaker">{talk.speaker}</div>
+                        </div>
+                      </div>
+                      {expandedTalks[`0x5-${talk.id}`] && (
+                        <div className="talk-description">
+                          {talk.description.split('\n\n').map((paragraph, index) => (
+                            <p key={index} style={{ marginBottom: '1em' }}>
+                              {paragraph}
+                            </p>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+
                 {/* Sprawl 0x4 */}
                 <div className="event-details">
                   <h2>-- Sprawl 0x4 --</h2>
