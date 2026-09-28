@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react'
 import './App.css'
-import { decodeLumaCode } from './encodeUtils'
 
 function App() {
   const [memoryAddresses, setMemoryAddresses] = useState([])
@@ -11,9 +10,6 @@ function App() {
   const [matrixColumns, setMatrixColumns] = useState([])
   const [effectIntensity, setEffectIntensity] = useState(8) // Start at 8x intensity
   const [hoveredTalk, setHoveredTalk] = useState(null)
-  const [registrationUnlockTime] = useState(new Date('2026-09-28T18:00:00-04:00'))
-  const [timeUntilUnlock, setTimeUntilUnlock] = useState(null)
-  const [isRegistrationOpen, setIsRegistrationOpen] = useState(false)
 
   const generateHexAddress = () => {
     return '0x' + Math.random().toString(16).substring(2, 10).toUpperCase()
@@ -35,32 +31,6 @@ function App() {
 
     return () => clearInterval(interval)
   }, [])
-
-  // Registration countdown timer
-  useEffect(() => {
-    const updateCountdown = () => {
-      const now = new Date()
-      const timeDiff = registrationUnlockTime - now
-
-      if (timeDiff <= 0) {
-        setIsRegistrationOpen(true)
-        setTimeUntilUnlock(null)
-      } else {
-        setIsRegistrationOpen(false)
-        const days = Math.floor(timeDiff / (1000 * 60 * 60 * 24))
-        const hours = Math.floor((timeDiff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60))
-        const minutes = Math.floor((timeDiff % (1000 * 60 * 60)) / (1000 * 60))
-        const seconds = Math.floor((timeDiff % (1000 * 60)) / 1000)
-
-        setTimeUntilUnlock({ days, hours, minutes, seconds })
-      }
-    }
-
-    updateCountdown()
-    const interval = setInterval(updateCountdown, 1000)
-
-    return () => clearInterval(interval)
-  }, [registrationUnlockTime])
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -144,7 +114,7 @@ function App() {
 
   const handleRegisterClick = (e) => {
     e.preventDefault()
-    window.open('https://luma.com/xxxxxxxx', '_blank', 'noopener,noreferrer')
+    window.open('https://luma.com/qanh0y8b', '_blank', 'noopener,noreferrer')
   }
 
   const asciiText = `
@@ -353,25 +323,10 @@ This talk will test the promise of privacy provided by these systems -- covering
           {/* Sprawl 0x7 Section */}
           <div className="event-details">
             <h2>-- Sprawl 0x7 --</h2>
-            <div>October 6th, 2026 @ Microsoft</div>
-            <div>Sponsored by Crash Override</div>
-            {isRegistrationOpen ? (
-              <a href="#" className="register-button" onClick={handleRegisterClick}>
-                Register
-              </a>
-            ) : (
-              <div className="register-countdown">
-                {timeUntilUnlock && (
-                  <div>
-                    Registration opens in: {' '}
-                    {timeUntilUnlock.days > 0 && `${timeUntilUnlock.days}d `}
-                    {timeUntilUnlock.hours > 0 && `${timeUntilUnlock.hours}h `}
-                    {timeUntilUnlock.minutes > 0 && `${timeUntilUnlock.minutes}m `}
-                    {timeUntilUnlock.seconds}s
-                  </div>
-                )}
-              </div>
-            )}
+            <div>October 6th, 2026 @ Microsoft, co-sponsored by Crash Override</div>
+            <a href="#" className="register-button" onClick={handleRegisterClick}>
+              Register
+            </a>
           </div>
 
           <div className="talks-container">
