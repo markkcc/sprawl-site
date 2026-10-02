@@ -8,6 +8,14 @@ A non-corporate technical meetup run by a NYC hacker community.
 
 Hosted every couple of months.
 
+## Event visuals
+
+The homepage opens with the SPRAWL challenge coin decoding at the top (a still frame for visitors who prefer reduced motion). Click the coin to reveal the **Launch event visuals** button, then click it for a fullscreen, silent preshow. Eleven scenes loop every 5 minutes: the SPRAWL challenge coin's circuit-traced Statue of Liberty rebuilt in glitching ASCII (generated into `src/libertyAscii.js`), rotating SPRAWL ASCII art, an ASCII New York skyline (Empire State, Chrysler, One World Trade and the Brooklyn Bridge) with neon signs and radio signals, a simulated Turbo Vision desktop, a subway network styled as a retro signal-tracking board, a terminal session, a Neuromancer-inspired wireframe city, a software-defined radio waterfall that paints the SPRAWL logo as spectrogram art, a neon ASCII pin tumbler lock that glitches with every set pin and explodes open, a circuit board whose UART boot log is decoded by a logic analyzer, and Conway's Game of Life with a Gosper glider gun beside the hacker emblem. The top banner shows today's date. Use the **left and right arrow keys** to jump between scenes. The top-right **Lock** button (or the **L** key) holds the current scene, looping it until you unlock it or press an arrow key. Press **Escape** or use the top-right exit button to return to the site.
+
+The desktop runs its scripted menus and dialogs without a mouse pointer or click indicators. The seventh scene slowly scrolls an attributed, abridged passage from William Gibson's *Neuromancer* about BAMA, the Sprawl, with *Sprawl* and *Manhattan* highlighted.
+
+The show uses local canvas graphics and the bundled font, and falls back to a full-window overlay if browser fullscreen is unavailable. Scene artwork and durations live in `src/eventShowRenderer.js`; fullscreen controls live in `src/EventShow.jsx`.
+
 ## Sprawl 0x1
 
 **Date: October 2nd, 2025**
@@ -48,6 +56,4 @@ Speaker: Aman Ali
 Description: Private LLMs are emerging across the tech landscape, starting with Apple's PCC, then GCP/Azure's Confidential AI Cloud offerings, and Whatsapps Private Processing products. These systems promise a secure LLM you can verifiably send your most sensitive information to, and often draw parallels to e2ee messaging systems like Signal or WhatsApp. However, one end of this connection is always decrypted in a server somewhere and is subject to undetectable law enforcement, hackers and curious insiders. How far do the technologies underpinning these systems actually go, and what does it take to turn your upcoming AI confidant into a backdoor into your phone's data?
 
 This talk will test the promise of privacy provided by these systems -- covering confidentiality, non-targetability, and verifiable transparency offered through TEEs, OHTTP and binary transparency logs.
-
-
 
