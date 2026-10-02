@@ -1,0 +1,33 @@
+.coin-intro {
+  display: block;
+  width: min(520px, 88vw);
+  aspect-ratio: 1;
+  margin: -0.5rem auto 0;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: none;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.coin-intro canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+/* Override the global button focus ring: only keyboard focus gets an outline. */
+.coin-intro:focus {
+  outline: none;
+}
+
+.coin-intro:focus-visible {
+  outline: 2px solid #6fe7e7;
+  outline-offset: -6px;
+}
+
+/* On small screens the theme switcher overlaps the top of the page; start the coin below it. */
+@media (max-width: 600px) {
+  .coin-intro { margin-top: 2.4rem; }
+}

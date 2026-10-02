@@ -1,11 +1,14 @@
 import { useState, useEffect } from 'react'
 import './App.css'
+import EventShow from './EventShow.jsx'
+import CoinIntro from './CoinIntro.jsx'
 
 function App() {
   const [memoryAddresses, setMemoryAddresses] = useState([])
   const [expandedTalks, setExpandedTalks] = useState({})
   const [currentTheme, setCurrentTheme] = useState('default')
   const [olderEventsExpanded, setOlderEventsExpanded] = useState(false)
+  const [launcherVisible, setLauncherVisible] = useState(false)
   const [stars, setStars] = useState([])
   const [matrixColumns, setMatrixColumns] = useState([])
   const [effectIntensity, setEffectIntensity] = useState(8) // Start at 8x intensity
@@ -301,6 +304,8 @@ This talk will test the promise of privacy provided by these systems -- covering
       ))}
 
       <div className="ascii-art-container">
+        <CoinIntro expanded={launcherVisible} onToggle={() => setLauncherVisible(visible => !visible)} />
+        <EventShow launcherVisible={launcherVisible} />
         {currentTheme === 'purple' ? (
           <h1 className="fancy-title">The Sprawl</h1>
         ) : (
@@ -636,5 +641,4 @@ This talk will test the promise of privacy provided by these systems -- covering
 }
 
 export default App
-
 
