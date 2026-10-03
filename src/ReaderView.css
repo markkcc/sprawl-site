@@ -1,0 +1,117 @@
+.reader {
+  color-scheme: light;
+  max-width: 60rem;
+  margin: 0 auto;
+  padding: 0 1rem 2rem;
+  font-family: 'Times New Roman', Times, serif;
+  font-size: 18px;
+  line-height: 1.4;
+  color: #000000;
+  text-align: center;
+}
+
+.reader h1 {
+  font-family: 'Playfair Display', serif;
+  font-size: 72px;
+  font-weight: 700;
+  font-style: italic;
+  color: #1a1a1a;
+  letter-spacing: 2px;
+  line-height: 1.1;
+  margin: 0 0 0.4em;
+}
+
+.reader h2 {
+  font-size: 1.4em;
+  margin: 1.5em 0 0.5em;
+}
+
+.reader p {
+  margin: 0 0 1em;
+}
+
+.reader a {
+  color: #0000ee;
+}
+
+.reader a:visited {
+  color: #551a8b;
+}
+
+.reader table {
+  width: 100%;
+  table-layout: fixed;
+  border-collapse: collapse;
+}
+
+.reader .reader-col-speaker {
+  width: 30%;
+}
+
+.reader .reader-col-abstract {
+  width: 6em;
+}
+
+.reader th,
+.reader td {
+  border: 1px solid #000000;
+  padding: 0.3em 0.5em;
+  text-align: left;
+  vertical-align: top;
+  overflow-wrap: break-word;
+}
+
+.reader thead th {
+  background: #eeeeee;
+}
+
+.reader .reader-event {
+  background: #f5f5f5;
+}
+
+/* Center the [+] toggle in its narrow column. */
+.reader .reader-abstract-cell {
+  text-align: center;
+}
+
+.reader .reader-toggle {
+  border: none;
+  border-radius: 0;
+  background: none;
+  padding: 0;
+  font: inherit;
+  color: #0000ee;
+  cursor: pointer;
+}
+
+.reader .reader-toggle:hover {
+  text-decoration: underline;
+}
+
+.reader .reader-abstract td {
+  overflow-wrap: anywhere;
+}
+
+.reader .reader-abstract p:last-child {
+  margin-bottom: 0;
+}
+
+@media (max-width: 768px) {
+  .reader h1 {
+    font-size: 56px;
+  }
+}
+
+@media (max-width: 480px) {
+  .reader {
+    font-size: 16px;
+  }
+
+  .reader h1 {
+    font-size: 42px;
+  }
+
+  .reader .reader-col-abstract {
+    width: 5.5em;
+  }
+}

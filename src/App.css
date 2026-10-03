@@ -7,6 +7,7 @@
 }
 
 .app {
+  --text-scale: 1;
   min-height: 100vh;
   background: linear-gradient(135deg, #2d1b69 0%, #1a103f 50%, #0f0a2e 100%);
   display: flex;
@@ -20,6 +21,7 @@
 }
 
 .app.theme-default {
+  --text-scale: 1.2;
   background: linear-gradient(135deg, #2d1b69 0%, #1a103f 50%, #0f0a2e 100%);
 }
 
@@ -28,7 +30,9 @@
 }
 
 .app.theme-purple {
-  background: #f5f5f5;
+  display: block;
+  padding: 0;
+  background: #ffffff;
 }
 
 .theme-switcher {
@@ -208,123 +212,10 @@
   text-shadow: 0 0 8px rgba(255, 255, 255, 0.9);
 }
 
-/* Purple theme - Reader mode */
-.theme-purple * {
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen-Sans, Ubuntu, Cantarell, "Helvetica Neue", sans-serif !important;
-}
-
-.theme-purple .ascii-art,
-.theme-purple .info-header,
-.theme-purple .event-details,
-.theme-purple .toggle-icon,
-.theme-purple .talk-description,
-.theme-purple .text-line,
-.theme-purple .talk-speaker {
-  color: #333333;
-}
-
-.theme-purple .ascii-art::after,
-.theme-purple .ascii-art::before {
-  display: none;
-}
-
-.theme-purple .event-details h2,
-.theme-purple .talk-title {
-  color: #000000;
-}
-
-.theme-purple .memory-address {
-  display: none;
-}
-
-.theme-purple .talk-box {
-  border-color: #666666;
-  background: rgba(255, 255, 255, 0.9);
-}
-
-.theme-purple .talk-box:hover {
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  background: rgba(255, 255, 255, 1);
-}
-
-.theme-purple .event-details a {
-  color: #0066cc;
-  text-decoration: underline;
-}
-
-.theme-purple .event-details a:hover {
-  color: #0052a3;
-}
-
-.theme-purple .ascii-art-container {
-  background: rgba(255, 255, 255, 0.95);
-  border-radius: 8px;
-  padding: 2rem;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-}
-
-.theme-purple .register-button {
-  background: transparent !important;
-  border-color: #333333 !important;
-  color: #333333 !important;
-  font-family: 'Playfair Display', serif !important;
-  font-style: italic;
-  font-size: 24px;
-  text-decoration: none !important;
-}
-
-.theme-purple .register-button:hover {
-  background: #333333 !important;
-  color: #ffffff !important;
-  border-color: #333333 !important;
-  text-decoration: none !important;
-}
-
-.theme-purple .register-button::before,
-.theme-purple .register-button::after {
-  display: none !important;
-}
-
-.theme-purple .register-countdown {
-  color: #333333;
-  border-color: #333333;
-  background: rgba(255, 255, 255, 0.9);
-  text-shadow: none;
-  font-family: 'Playfair Display', serif !important;
-  font-style: italic;
-  font-size: 24px;
-}
-
-.theme-purple .older-events-section {
-  border-top-color: #666666;
-}
-
-.theme-purple .older-events-header:hover {
-  background: rgba(0, 0, 0, 0.05);
-}
-
-.theme-purple .older-events-header h3 {
-  color: #333333;
-}
-
-.theme-purple .talk-star {
-  display: none;
-}
-
-.theme-purple .matrix-column {
-  display: none;
-}
-
-.fancy-title {
-  font-family: 'Playfair Display', serif !important;
-  font-size: 72px;
-  font-weight: 700;
-  font-style: italic;
-  color: #1a1a1a;
-  text-align: center;
-  margin: 1rem 0 2rem 0;
-  letter-spacing: 2px;
-  text-transform: none;
+/* Purple theme - Reader mode: a plain white page, see ReaderView.css */
+.theme-purple .theme-switcher {
+  position: static;
+  padding: 1rem 1rem 0;
 }
 
 .memory-address {
@@ -466,7 +357,7 @@
 
 .text-line {
   font-family: 'VT323', monospace;
-  font-size: 20px;
+  font-size: calc(20px * var(--text-scale));
   color: #ff00ff;
   margin-top: 1rem;
   text-align: left;
@@ -527,7 +418,7 @@
 .info-header {
   margin-bottom: 2rem;
   color: #00ffff;
-  font-size: 18px;
+  font-size: calc(18px * var(--text-scale));
   line-height: 1.4;
   text-align: center;
 }
@@ -539,12 +430,12 @@
 .event-details {
   margin-bottom: 2rem;
   color: #00ffff;
-  font-size: 18px;
+  font-size: calc(18px * var(--text-scale));
   text-align: center;
 }
 
 .event-details h2 {
-  font-size: 36px;
+  font-size: calc(36px * var(--text-scale));
   margin-bottom: 1rem;
   color: #ff00ff;
 }
@@ -684,7 +575,7 @@
 
 .toggle-icon {
   color: #00ffff;
-  font-size: 18px;
+  font-size: calc(18px * var(--text-scale));
   min-width: fit-content;
   user-select: none;
   font-weight: bold;
@@ -696,21 +587,22 @@
 
 .talk-title {
   color: #ff00ff;
-  font-size: 22px;
+  font-size: calc(22px * var(--text-scale));
   margin-bottom: 0.5rem;
   font-weight: bold;
 }
 
 .talk-speaker {
   color: #ff66ff;
-  font-size: 18px;
+  font-size: calc(18px * var(--text-scale));
 }
 
 .talk-description {
   padding: 0 1rem 1rem 3.5rem;
   color: #00ffff;
-  font-size: 18px;
+  font-size: calc(18px * var(--text-scale));
   line-height: 1.6;
+  overflow-wrap: anywhere;
   animation: fadeIn 0.3s ease;
   position: relative;
   z-index: 1;
@@ -744,7 +636,7 @@
   background: transparent;
   color: #ff00ff;
   font-family: 'VT323', monospace;
-  font-size: 22px;
+  font-size: calc(22px * var(--text-scale));
   font-weight: bold;
   text-decoration: none !important;
   border: 2px solid #ff00ff;
@@ -759,7 +651,7 @@
   background: transparent;
   color: #ff00ff;
   font-family: 'VT323', monospace;
-  font-size: 22px;
+  font-size: calc(22px * var(--text-scale));
   font-weight: bold;
   border: 2px solid #ff00ff;
   border-radius: 4px;
@@ -997,7 +889,7 @@
 
 .older-events-header h3 {
   font-family: 'VT323', monospace;
-  font-size: 28px;
+  font-size: calc(28px * var(--text-scale));
   color: #ff00ff;
   margin: 0;
   font-weight: bold;
@@ -1010,10 +902,6 @@
 
 /* Responsive design */
 @media (max-width: 768px) {
-  .fancy-title {
-    font-size: 56px;
-  }
-
   .ascii-art-container {
     width: 95vw;
     padding: 1rem;
@@ -1024,7 +912,7 @@
   }
 
   .text-line {
-    font-size: 18px;
+    font-size: calc(18px * var(--text-scale));
   }
 
   .memory-address {
@@ -1033,37 +921,33 @@
 
   .info-header,
   .event-details {
-    font-size: 16px;
+    font-size: calc(16px * var(--text-scale));
   }
 
   .talk-title {
-    font-size: 20px;
+    font-size: calc(20px * var(--text-scale));
   }
 
   .talk-speaker,
   .talk-description {
-    font-size: 16px;
+    font-size: calc(16px * var(--text-scale));
   }
 
   .event-details h2 {
-    font-size: 28px;
+    font-size: calc(28px * var(--text-scale));
   }
 
   .register-button {
-    font-size: 20px;
+    font-size: calc(20px * var(--text-scale));
     padding: 0.3rem 1.2rem;
   }
 
   .older-events-header h3 {
-    font-size: 24px;
+    font-size: calc(24px * var(--text-scale));
   }
 }
 
 @media (max-width: 480px) {
-  .fancy-title {
-    font-size: 42px;
-  }
-
   .ascii-art-container {
     width: 95vw;
     padding: 0.5rem;
@@ -1074,7 +958,7 @@
   }
 
   .text-line {
-    font-size: 16px;
+    font-size: calc(16px * var(--text-scale));
   }
 
   .memory-address {
@@ -1083,20 +967,20 @@
 
   .info-header,
   .event-details {
-    font-size: 14px;
+    font-size: calc(14px * var(--text-scale));
   }
 
   .talk-title {
-    font-size: 18px;
+    font-size: calc(18px * var(--text-scale));
   }
 
   .talk-speaker,
   .talk-description {
-    font-size: 14px;
+    font-size: calc(14px * var(--text-scale));
   }
 
   .event-details h2 {
-    font-size: 22px;
+    font-size: calc(22px * var(--text-scale));
   }
 
   .talk-header {
@@ -1108,12 +992,12 @@
   }
 
   .register-button {
-    font-size: 18px;
+    font-size: calc(18px * var(--text-scale));
     padding: 0.3rem 1rem;
   }
 
   .older-events-header h3 {
-    font-size: 22px;
+    font-size: calc(22px * var(--text-scale));
   }
 }
 
