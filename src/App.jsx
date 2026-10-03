@@ -132,15 +132,19 @@ function App() {
   const talks0x7 = [
     {
       id: 1,
-      title: "TBD",
-      speaker: "TBD",
-      description: "TBD"
+      title: "Stopping the Flood",
+      speaker: "Alex Beaver",
+      description: `Detection and Response teams are responsible for keeping the rest of the organization running during an incident. But what happens when the D&R infrastructure itself starts to fail?
+
+In this talk, we will look at how alert floods can overwhelm SIEM, SOAR, enrichment, and case-management pipelines, and why queue saturation can turn a temporary spike in volume into a much longer outage. We will use queueing theory to understand what happens as arrival rates approach processing capacity, why operating near 100% utilization is dangerous, and how backlogs can continue to hurt response long after the original surge is over.
+
+From there, we will look at practical ways to make D&R infrastructure more resilient: reducing unnecessary work, increasing and protecting processing capacity, isolating critical workloads, applying backpressure, shedding lower-value work, and degrading gracefully when dependencies fail. Finally, we will cover how to map your own D&R pipelines, identify weak links, and design them so that the alerts that matter most still get processed when the system is under pressure.`
     },
     {
       id: 2,
-      title: "TBD",
-      speaker: "TBD",
-      description: "TBD"
+      title: "Facade - Google's last line of defense against insider threats",
+      speaker: "Casper Neo",
+      description: "Insider threat detection is a notoriously hard security problem. Our threat model assumes the attacker has employee credentials and is abusing their access to internal systems, using everyday tools. There is no malware or network intrusion to detect. This talk presents Facade, Google's last line of defense against insider threats. Facade considers employee access to document storage, data lake, and internal websites; and finds access events that were statically authorized, but unlikely to be business justified. In an espionage red team exercise, it ranked attackers in the top 10 most suspicious people of over 180,000 employees."
     }
   ]
 
