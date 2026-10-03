@@ -124,11 +124,6 @@ function noise(seed) {
   const n = Math.sin(seed * 127.1 + 311.7) * 43758.5453
   return n - Math.floor(n)
 }
-function logo(ctx, x, y, cell, color, character = '#') {
-  LOGO.forEach((row, r) => [...row].forEach((pixel, c) => {
-    if (pixel === '1') text(ctx, character, x + c * cell, y + r * cell, cell * 1.65, color)
-  }))
-}
 function caption(ctx, eyebrow, title, subtitle) {
   text(ctx, eyebrow, 64, 128, 18, GREEN)
   text(ctx, title, 60, 162, 72, '#e0efec')
@@ -576,71 +571,259 @@ function skyline(ctx, t) {
   }
 }
 
-function windowFrame(ctx, x, y, w, h, title, fill = '#b6b7bd') {
-  box(ctx, x + 12, y + 14, w, h, '#00000080')
-  box(ctx, x, y, w, h, fill)
-  box(ctx, x + 7, y + 7, w - 14, h - 14, null, '#f0f0d5')
-  box(ctx, x + 11, y + 11, w - 22, h - 22, null, '#f0f0d5')
-  const titleWidth = title.length * 10 + 28
-  box(ctx, x + (w - titleWidth) / 2, y, titleWidth, 25, fill)
-  text(ctx, title, x + w / 2, y + 3, 20, '#111340', 'center')
-  text(ctx, '[■]', x + 20, y + 3, 20, '#111340')
+// A Turbo Vision desktop on a true 80x23 text-mode grid: 18x32 cells, the CGA palette and
+// Turbo Vision's default colour scheme. Unifont at 32px is exactly twice its native pixels.
+const TV_COLS = 80
+const TV_ROWS = 23
+const TV_TOP = 78
+const CGA = ['#000000', '#0000aa', '#00aa00', '#00aaaa', '#aa0000', '#aa00aa', '#aa5500', '#aaaaaa',
+  '#555555', '#5555ff', '#55ff55', '#55ffff', '#ff5555', '#ff55ff', '#ffff55', '#ffffff']
+const [BLACK, BLUE, GREEN_, CYAN_, RED, , , GRAY, DARK, LBLUE, LGREEN, LCYAN, , , YELLOW, WHITE] = CGA.map((_, i) => i)
+const DOS_FILES = ['..\\', 'BOROUGHS\\', 'MEETUP.TXT', 'NYC.SYS', 'README.NFO', 'SIGNAL.EXE',
+  'TALKS.DOC', 'PIZZA.BAT', 'BADGE.HEX', 'MESH.CFG', 'WINTERMT.EXE', 'ONO.SYS']
+// Sizes match the C:\SPRAWL directory window; the rest are filler.
+const DOS_SIZES = { 'MEETUP.TXT': '1,024', 'NYC.SYS': '40,712', 'README.NFO': '4,096', 'SIGNAL.EXE': '64,000', 'TALKS.DOC': '9,216', 'PIZZA.BAT': '512' }
+const TV_MENU = ['~N~ew', '~O~pen...|F3', '~S~ave|F2', 'S~a~ve as...', '-', '~C~hange dir...', '~D~OS shell', 'E~x~it|Alt-X']
+
+function textScreen() {
+  const cells = Array.from({ length: TV_COLS * TV_ROWS }, () => ({ ch: ' ', fg: GRAY, bg: BLUE }))
+  const at = (x, y) => (x >= 0 && x < TV_COLS && y >= 0 && y < TV_ROWS ? cells[y * TV_COLS + x] : null)
+  const put = (x, y, ch, fg, bg) => {
+    const cell = at(x, y)
+    if (cell) Object.assign(cell, { ch, fg, bg: bg ?? cell.bg })
+  }
+  const write = (x, y, value, fg, bg) => [...value].forEach((ch, i) => put(x + i, y, ch, fg, bg))
+  // Turbo Vision marks hotkeys with tildes: "~F~ile" draws the F in the hotkey colour.
+  const writeHot = (x, y, value, fg, hot, bg) => {
+    let col = x
+    value.split('~').forEach((part, i) => { write(col, y, part, i % 2 ? hot : fg, bg); col += part.length })
+  }
+  const fill = (x0, y0, x1, y1, ch, fg, bg) => { for (let y = y0; y <= y1; y++) for (let x = x0; x <= x1; x++) put(x, y, ch, fg, bg) }
+  // Shadows darken what is underneath: two columns to the right, one row below.
+  const shadow = (x0, y0, x1, y1) => {
+    for (let y = y0 + 1; y <= y1 + 1; y++) {
+      for (let x = x0 + 2; x <= x1 + 2; x++) {
+        if (x > x1 || y > y1) { const cell = at(x, y); if (cell) Object.assign(cell, { fg: DARK, bg: BLACK }) }
+      }
+    }
+  }
+  return { cells, put, write, writeHot, fill, shadow }
+}
+
+function tvWindow(s, x0, y0, x1, y1, { title, fg, bg, active, number, scrollV, scrollH }) {
+  s.shadow(x0, y0, x1, y1)
+  s.fill(x0, y0, x1, y1, ' ', fg, bg)
+  const [h, v, tl, tr, bl, br] = active ? '═║╔╗╚╝' : '─│┌┐└┘'
+  s.write(x0, y0, tl + h.repeat(x1 - x0 - 1) + tr, fg, bg)
+  s.write(x0, y1, bl + h.repeat(x1 - x0 - 1) + br, fg, bg)
+  for (let y = y0 + 1; y < y1; y++) { s.put(x0, y, v, fg, bg); s.put(x1, y, v, fg, bg) }
+  const label = ` ${title} `
+  s.write(Math.floor((x0 + x1 - label.length) / 2) + 1, y0, label, active ? WHITE : fg, bg)
+  if (active) {
+    s.write(x0 + 2, y0, '[ ]', fg, bg)
+    s.put(x0 + 3, y0, '■', LGREEN, bg)
+    if (number) {
+      s.write(x1 - 4, y0, '[ ]', fg, bg)
+      s.put(x1 - 3, y0, '↑', LGREEN, bg)
+    }
+  }
+  if (number) s.write(x1 - (active ? 7 : 3), y0, String(number), fg, bg)
+  if (scrollV !== undefined) {
+    s.put(x1, y0 + 1, '▲', BLUE, CYAN_)
+    s.fill(x1, y0 + 2, x1, y1 - 2, '░', BLUE, CYAN_)
+    s.put(x1, y0 + 2 + Math.round(scrollV * (y1 - y0 - 4)), '■', BLUE, CYAN_)
+    s.put(x1, y1 - 1, '▼', BLUE, CYAN_)
+  }
+  if (scrollH !== undefined) {
+    const from = x0 + 18
+    s.put(from, y1, '◄', BLUE, CYAN_)
+    s.fill(from + 1, y1, x1 - 3, y1, '░', BLUE, CYAN_)
+    s.put(from + 1 + Math.round(scrollH * (x1 - from - 5)), y1, '■', BLUE, CYAN_)
+    s.put(x1 - 2, y1, '►', BLUE, CYAN_)
+  }
+}
+
+// Buttons are green with a half-block shadow; a pressed button shifts right and loses it.
+function tvButton(s, x, y, label, { pressed = false, enabled = true, focused = false, under = GRAY } = {}) {
+  const width = label.replace(/~/g, '').length + 4
+  const left = pressed ? x + 1 : x
+  s.fill(left, y, left + width - 1, y, ' ', BLACK, GREEN_)
+  const text = enabled ? (focused ? WHITE : BLACK) : DARK
+  s.writeHot(left + 2, y, label, text, enabled ? YELLOW : DARK, GREEN_)
+  if (pressed) s.put(x, y, ' ', BLACK, under)
+  else {
+    s.put(x + width, y, '▄', BLACK, under)
+    s.write(x + 1, y + 1, '▀'.repeat(width), BLACK, under)
+  }
+}
+
+function tvDialog(s, x0, y0, x1, y1, title) {
+  tvWindow(s, x0, y0, x1, y1, { title, fg: WHITE, bg: GRAY, active: true })
+}
+
+function paintTextScreen(ctx, s) {
+  // Backgrounds first, as runs of the same colour, then glyphs scaled to 18px-wide cells.
+  for (let y = 0; y < TV_ROWS; y++) {
+    for (let x = 0; x < TV_COLS;) {
+      const bg = s.cells[y * TV_COLS + x].bg
+      let end = x
+      while (end < TV_COLS && s.cells[y * TV_COLS + end].bg === bg) end++
+      box(ctx, x * 18, TV_TOP + y * 32, (end - x) * 18, 32, CGA[bg])
+      x = end
+    }
+  }
+  ctx.save()
+  ctx.translate(0, TV_TOP)
+  ctx.scale(18 / 16, 1)
+  ctx.font = `32px ${FONT}`
+  ctx.textAlign = 'left'
+  ctx.textBaseline = 'top'
+  for (let y = 0; y < TV_ROWS; y++) {
+    for (let x = 0; x < TV_COLS;) {
+      const fg = s.cells[y * TV_COLS + x].fg
+      let end = x
+      let run = ''
+      while (end < TV_COLS && s.cells[y * TV_COLS + end].fg === fg) run += s.cells[y * TV_COLS + end++].ch
+      if (run.trim()) {
+        ctx.fillStyle = CGA[fg]
+        ctx.fillText(run, x * 16, y * 32)
+      }
+      x = end
+    }
+  }
+  ctx.restore()
 }
 
 function desktop(ctx, t) {
-  box(ctx, 40, 98, 1360, 694, '#090a8a')
-  for (let y = 142; y < 773; y += 18) text(ctx, '░ '.repeat(85), 45, y, 16, '#292ca4')
-  box(ctx, 40, 98, 1360, 32, '#b6b7bd')
-  text(ctx, ' ≡   File   Network   Windows   Help', 52, 103, 22, '#111340')
-  text(ctx, 'SPRAWL OS  /  v.0x07', 1368, 105, 18, '#111340', 'right')
-  box(ctx, 40, 760, 1360, 32, '#b6b7bd')
-  text(ctx, ' F1 Help   F3 Open   F5 Zoom   F10 Menu', 52, 765, 21, '#111340')
-  text(ctx, 'DEMO SESSION', 1370, 766, 18, '#111340', 'right')
-  windowFrame(ctx, 98, 163, 1210, 233, 'Welcome to the sprawl', '#00a5a7')
-  logo(ctx, 322, 207, 20, '#082451', '█')
-  text(ctx, 'NEW YORK CITY  /  CYBERSECURITY  /  COMMUNITY', 700, 362, 19, '#082451', 'center')
-  windowFrame(ctx, 107, 425, 460, 287, 'C:\\SPRAWL\\')
-  const files = ['..             <UP-DIR>', 'BOROUGHS       <DIR>   ', 'SIGNAL   EXE   64,000  ', 'MEETUP   TXT    1,024  ', 'README   NFO    4,096  ', 'NYC      SYS   40,712  ']
-  const selection = t < 7 ? 1 : t < 18 ? 2 : 3
-  files.forEach((file, i) => {
-    if (i === selection) box(ctx, 130, 465 + i * 31, 410, 29, '#080c80')
-    text(ctx, file, 142, 467 + i * 31, 22, i === selection ? '#ffff73' : '#111340')
+  const s = textScreen()
+  const clock = new Date()
+  const pad = n => String(n).padStart(2, '0')
+  const menuOpen = t >= 2 && t < 6.5
+  const openDialog = t >= 6.6 && t < 13.6
+  const progressDialog = t >= 13.8 && t < 20.8
+  const infoBox = t >= 22 && t < 29.6
+  const modal = menuOpen || openDialog || progressDialog || infoBox
+
+  // Desktop, menu bar and status line.
+  s.fill(0, 1, 79, 21, '░', GRAY, BLUE)
+  s.fill(0, 0, 79, 0, ' ', BLACK, GRAY)
+  let col = 1
+  for (const item of ['≡', '~F~ile', '~E~dit', '~S~earch', '~R~un', '~C~ompile', '~T~ools', '~O~ptions', '~W~indow', '~H~elp']) {
+    const width = item.replace(/~/g, '').length + 2
+    const open = menuOpen && item === '~F~ile'
+    s.writeHot(col, 0, ` ${item} `, BLACK, RED, open ? GREEN_ : GRAY)
+    col += width
+  }
+  s.write(71, 0, `${pad(clock.getHours())}:${pad(clock.getMinutes())}:${pad(clock.getSeconds())}`, BLACK, GRAY)
+  s.fill(0, 22, 79, 22, ' ', BLACK, GRAY)
+  s.writeHot(1, 22, '~F1~ Help  ~F2~ Save  ~F3~ Open  ~Alt-F9~ Compile  ~F9~ Make  ~F10~ Menu', BLACK, RED, GRAY)
+  s.write(61, 22, '│ SPRAWL OS 0x0B', BLACK, GRAY)
+
+  // SPRAWL.NFO: the big logo in an editor window, with Turbo Pascal's line:column indicator.
+  const fileSelected = t < 13.6 ? 1 : 5
+  const listActive = !modal && t >= 13.6 && t < 22
+  tvWindow(s, 2, 1, 77, 11, { title: 'SPRAWL.NFO', fg: modal || listActive ? GRAY : WHITE, bg: BLUE, active: !modal && !listActive, number: 1, scrollV: 0, scrollH: 0 })
+  SPRAWL_BANNER.forEach((row, r) => [...row].forEach((ch, c) => {
+    if (ch !== ' ') s.put(15 + c, 3 + r, ch, ch === '█' ? YELLOW : LBLUE, BLUE)
+  }))
+  s.write(18, 10, 'NEW YORK CITY  ·  CYBERSECURITY  ·  COMMUNITY', LCYAN, BLUE)
+  s.write(6, 11, ' 1:1 ', modal ? GRAY : WHITE, BLUE)
+
+  // C:\SPRAWL: a cyan directory window.
+  tvWindow(s, 2, 13, 37, 20, { title: 'C:\\SPRAWL', fg: listActive ? WHITE : BLACK, bg: CYAN_, active: listActive, number: 2, scrollV: 0.2 })
+  ;['..          <UP-DIR>', 'BOROUGHS    <DIR>', 'MEETUP   TXT    1,024', 'NYC      SYS   40,712', 'README   NFO    4,096', 'SIGNAL   EXE   64,000']
+    .forEach((entry, i) => {
+      const chosen = i === fileSelected
+      if (chosen) s.fill(3, 14 + i, 36, 14 + i, ' ', WHITE, GREEN_)
+      s.write(4, 14 + i, entry, chosen ? WHITE : BLACK, chosen ? GREEN_ : CYAN_)
+    })
+
+  // Network monitor: borough links with traffic meters, refreshed four times a second.
+  tvWindow(s, 40, 13, 77, 20, { title: 'Network monitor', fg: GRAY, bg: BLUE, number: 3 })
+  s.write(42, 14, 'INTERFACE   STATUS   TRAFFIC', YELLOW, BLUE)
+  const tick = Math.floor(t * 4)
+  ;['MANHATTAN', 'BROOKLYN', 'QUEENS', 'BRONX', 'STATEN IS'].forEach((name, i) => {
+    const level = 3 + Math.floor(smoothNoise(tick * 0.18 + i * 9.7) * 10)
+    s.write(42, 15 + i, name.padEnd(12) + 'ONLINE', WHITE, BLUE)
+    s.write(63, 15 + i, '█'.repeat(level), LGREEN, BLUE)
+    s.write(63 + level, 15 + i, '░'.repeat(13 - level), DARK, BLUE)
   })
-  windowFrame(ctx, 610, 425, 690, 287, 'Network monitor', '#00a5a7')
-  text(ctx, 'INTERFACE    STATUS       TRAFFIC', 644, 464, 21, '#082451')
-  const boroughs = ['MANHATTAN', 'BROOKLYN ', 'QUEENS   ', 'BRONX    ', 'STATEN IS']
-  boroughs.forEach((name, i) => {
-    text(ctx, `${name}    ONLINE`, 644, 503 + i * 32, 21, '#082451')
-    const bars = 3 + Math.floor((Math.sin(t * 1.4 + i) + 1) * 5)
-    text(ctx, '▰'.repeat(bars), 986, 503 + i * 32, 21, '#ffff8a')
-  })
-  // Scripted desktop actions retain their timing without a simulated pointer.
-  if (t > 2 && t < 7) {
-    box(ctx, 217, 130, 269, 156, '#b6b7bd', '#111340')
-    text(ctx, '  Connect all', 228, 144, 22, '#111340')
-    box(ctx, 224, 179, 255, 29, '#080c80')
-    text(ctx, '  View routes', 228, 182, 22, '#ffff73')
-    text(ctx, '  Diagnostics', 228, 219, 22, '#111340')
-    text(ctx, '  Disconnect', 228, 251, 22, '#111340')
+
+  if (menuOpen) {
+    // File menu: a single-line box, the current item on a green bar.
+    const selected = t < 3.4 ? 0 : 1
+    s.shadow(2, 1, 22, 10)
+    s.fill(2, 1, 22, 10, ' ', BLACK, GRAY)
+    s.write(2, 1, `┌${'─'.repeat(19)}┐`, BLACK, GRAY)
+    s.write(2, 10, `└${'─'.repeat(19)}┘`, BLACK, GRAY)
+    TV_MENU.forEach((item, i) => {
+      const y = 2 + i
+      s.put(2, y, '│', BLACK, GRAY)
+      s.put(22, y, '│', BLACK, GRAY)
+      if (item === '-') { s.write(2, y, `├${'─'.repeat(19)}┤`, BLACK, GRAY); return }
+      const [label, key = ''] = item.split('|')
+      const bg = i === selected ? GREEN_ : GRAY
+      s.fill(3, y, 21, y, ' ', BLACK, bg)
+      s.writeHot(4, y, label, BLACK, RED, bg)
+      s.write(21 - key.length, y, key, BLACK, bg)
+    })
   }
-  if (t > 10 && t < 18) {
-    windowFrame(ctx, 412, 436, 628, 221, 'Execute: SIGNAL.EXE')
-    text(ctx, 'Establishing the neighborhood mesh...', 442, 482, 22, '#111340')
-    const progress = Math.min(1, (t - 10) / 5)
-    box(ctx, 452, 532, 546, 26, '#080c80')
-    box(ctx, 452, 532, 546 * progress, 26, '#00a5a7')
-    text(ctx, `${Math.floor(progress * 100)}%`, 724, 535, 20, '#ffff73', 'center')
-    box(ctx, 785, 584, 150, 33, '#087e79')
-    text(ctx, progress === 1 ? '[  OK  ]' : '[ Wait ]', 860, 590, 22, '#fff', 'center')
+
+  if (openDialog) {
+    // Open a File: name input, a two-column file list, buttons and the file info pane.
+    const local = t - 6.6
+    const pick = Math.min(5, Math.max(0, Math.floor((local - 0.6) / 0.9)))
+    tvDialog(s, 13, 3, 66, 19, 'Open a File')
+    s.writeHot(15, 5, '~N~ame', BLACK, YELLOW, GRAY)
+    s.fill(15, 6, 47, 6, ' ', WHITE, BLUE)
+    s.write(16, 6, DOS_FILES[pick], WHITE, BLUE)
+    if (Math.floor(t * 2) % 2 === 0) s.put(16 + DOS_FILES[pick].length, 6, '_', WHITE, BLUE)
+    s.write(48, 6, '▐↓▌', LGREEN, GRAY)
+    s.writeHot(15, 8, '~F~iles', BLACK, YELLOW, GRAY)
+    s.fill(15, 9, 47, 14, ' ', BLACK, CYAN_)
+    DOS_FILES.forEach((name, i) => {
+      const x = i < 6 ? 16 : 32
+      const chosen = i === pick
+      if (chosen) s.fill(x - 1, 9 + (i % 6), x + 14, 9 + (i % 6), ' ', WHITE, GREEN_)
+      s.write(x, 9 + (i % 6), name, chosen ? WHITE : BLACK, chosen ? GREEN_ : CYAN_)
+    })
+    s.put(31, 9, '│', BLUE, CYAN_)
+    for (let y = 10; y <= 14; y++) s.put(31, y, '│', BLUE, CYAN_)
+    s.write(15, 15, `◄${'░'.repeat(31)}►`, BLUE, CYAN_)
+    s.put(16, 15, '■', BLUE, CYAN_)
+    tvButton(s, 51, 6, '~O~pen', { focused: true, pressed: local >= 6.4 && local < 6.8 })
+    tvButton(s, 51, 9, '~R~eplace')
+    tvButton(s, 51, 12, 'Cancel')
+    tvButton(s, 51, 15, '~H~elp')
+    s.fill(15, 17, 64, 18, ' ', YELLOW, BLUE)
+    s.write(16, 17, 'C:\\SPRAWL\\*.*', YELLOW, BLUE)
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+    s.write(16, 18, `${DOS_FILES[pick].padEnd(14)}${(DOS_FILES[pick].endsWith('\\') ? '<DIR>' : DOS_SIZES[DOS_FILES[pick]] ?? '2,048').padStart(7)}   ${months[clock.getMonth()]} ${String(clock.getDate()).padStart(2)}, ${clock.getFullYear()}   9:15pm`, YELLOW, BLUE)
   }
-  if (t > 22 && t < 29) {
-    windowFrame(ctx, 362, 418, 718, 270, 'MEETUP.TXT')
-    text(ctx, 'You are among your people.', 405, 465, 30, '#111340')
-    text(ctx, '> Find a seat. Meet a stranger.', 405, 515, 24, '#111340')
-    text(ctx, '> Talks start soon. Stay curious.', 405, 553, 24, '#111340')
-    box(ctx, 748, 600, 160, 34, '#087e79')
-    text(ctx, '[ Got it ]', 828, 606, 22, '#fff', 'center')
+
+  if (progressDialog) {
+    const local = t - 13.8
+    const progress = Math.min(1, Math.max(0, (local - 0.5) / 4.5))
+    tvDialog(s, 19, 6, 60, 15, 'Execute SIGNAL.EXE')
+    s.write(22, 8, 'Establishing the neighborhood mesh...', BLACK, GRAY)
+    const filled = Math.round(progress * 36)
+    s.write(22, 10, '█'.repeat(filled), BLUE, GRAY)
+    s.write(22 + filled, 10, '░'.repeat(36 - filled), DARK, GRAY)
+    s.write(37, 11, `${String(Math.round(progress * 100)).padStart(3)}%`, BLACK, GRAY)
+    tvButton(s, 35, 13, '  ~O~K  ', { enabled: progress === 1, focused: progress === 1, pressed: local >= 6.6 && local < 6.9 })
   }
+
+  if (infoBox) {
+    const local = t - 22
+    tvDialog(s, 17, 5, 62, 16, 'Information')
+    s.write(27, 7, 'You are among your people.', BLACK, GRAY)
+    s.write(22, 9, '> Find a seat. Meet a stranger.', BLACK, GRAY)
+    s.write(22, 10, '> Talks start soon. Stay curious.', BLACK, GRAY)
+    s.write(22, 12, '> MEETUP.TXT  1,024 bytes', DARK, GRAY)
+    tvButton(s, 35, 14, '  ~O~K  ', { focused: true, pressed: local >= 7.2 && local < 7.5 })
+  }
+
+  paintTextScreen(ctx, s)
 }
 
 const ROUTES = [
