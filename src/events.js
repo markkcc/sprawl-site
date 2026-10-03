@@ -1,10 +1,20 @@
-// Every Sprawl event and its talks. Both themes render from these.
+// Every Sprawl event and its talks. All themes render from these.
 
 export const REGISTER_URL = 'https://luma.com/qanh0y8b'
 
 // A talk's description is "TBD" until we have an abstract; the site shows "-" instead.
 // A paragraph starting with __SLIDES__ becomes a link to the slides.
 export const hasAbstract = talk => Boolean(talk.description) && talk.description !== 'TBD'
+export const abstractParagraphs = talk => talk.description.split('\n\n').map(paragraph =>
+  paragraph.startsWith('__SLIDES__') ? { slides: paragraph.replace('__SLIDES__', '') } : { text: paragraph })
+
+const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
+const ordinal = day => day + (day % 10 === 1 && day !== 11 ? 'st' : day % 10 === 2 && day !== 12 ? 'nd' : day % 10 === 3 && day !== 13 ? 'rd' : 'th')
+// "October 6th, 2026 @ Microsoft, co-sponsored by Crash Override"
+export function eventDetails({ date, venue }) {
+  const [year, month, day] = date.split('-').map(Number)
+  return `${MONTHS[month - 1]} ${ordinal(day)}, ${year} @ ${venue}`
+}
 
 const talks0x7 = [
   {
@@ -143,14 +153,14 @@ This talk will test the promise of privacy provided by these systems -- covering
 ]
 
 // The upcoming event; move it to the top of pastEvents once it has happened.
-export const currentEvent = { id: '0x7', name: 'Sprawl 0x7', details: 'October 6th, 2026 @ Microsoft, co-sponsored by Crash Override', talks: talks0x7 }
+export const currentEvent = { id: '0x7', name: 'Sprawl 0x7', date: '2026-10-06', venue: 'Microsoft, co-sponsored by Crash Override', talks: talks0x7 }
 
 // Newest first.
 export const pastEvents = [
-  { id: '0x6', name: 'Sprawl 0x6', details: 'August 18th, 2026 @ CLEAR', talks: talks0x6 },
-  { id: '0x5', name: 'Sprawl 0x5', details: 'June 4th, 2026 @ Etsy', talks: talks0x5 },
-  { id: '0x4', name: 'Sprawl 0x4', details: 'April 7th, 2026 @ Figma', talks: talks0x4 },
-  { id: '0x3', name: 'Sprawl 0x3', details: 'February 5th, 2026 @ Spotify', talks: talks0x3 },
-  { id: '0x2', name: 'Sprawl 0x2', details: 'December 2nd, 2025 @ DataDog', talks: talks0x2 },
-  { id: '0x1', name: 'Sprawl 0x1', details: 'October 2nd, 2025 @ Oscar Health', talks: talks0x1 }
+  { id: '0x6', name: 'Sprawl 0x6', date: '2026-08-18', venue: 'CLEAR', talks: talks0x6 },
+  { id: '0x5', name: 'Sprawl 0x5', date: '2026-06-04', venue: 'Etsy', talks: talks0x5 },
+  { id: '0x4', name: 'Sprawl 0x4', date: '2026-04-07', venue: 'Figma', talks: talks0x4 },
+  { id: '0x3', name: 'Sprawl 0x3', date: '2026-02-05', venue: 'Spotify', talks: talks0x3 },
+  { id: '0x2', name: 'Sprawl 0x2', date: '2025-12-02', venue: 'DataDog', talks: talks0x2 },
+  { id: '0x1', name: 'Sprawl 0x1', date: '2025-10-02', venue: 'Oscar Health', talks: talks0x1 }
 ]

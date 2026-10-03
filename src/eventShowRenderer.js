@@ -19,7 +19,7 @@ const GLYPHS = {
   W: ['11011', '11011', '11011', '11011', '11111', '11111', '01010'],
   L: ['11000', '11000', '11000', '11000', '11000', '11000', '11111'],
 }
-const LOGO = Array.from({ length: 7 }, (_, row) => [...'SPRAWL'].map(letter => GLYPHS[letter][row]).join('0'))
+export const LOGO = Array.from({ length: 7 }, (_, row) => [...'SPRAWL'].map(letter => GLYPHS[letter][row]).join('0'))
 const POINTS = []
 LOGO.forEach((row, y) => [...row].forEach((pixel, x) => {
   if (pixel !== '1') return
@@ -120,7 +120,7 @@ function cachedLayer(ctx, key, x, y, width, height, paint) {
   ctx.drawImage(layer.canvas, x, y, layer.canvas.width / scale, layer.canvas.height / scale)
   return layer
 }
-function noise(seed) {
+export function noise(seed) {
   const n = Math.sin(seed * 127.1 + 311.7) * 43758.5453
   return n - Math.floor(n)
 }
@@ -1085,7 +1085,7 @@ for (const byte of SSH_FINGERPRINT) {
   }
 }
 // Outside addresses come from the RFC 5737 documentation ranges.
-const AUTH_LOG = [
+export const AUTH_LOG = [
   ['Accepted publickey for guest from 10.0.7.42 port 51515 ssh2: ED25519', GREEN],
   ['Invalid user admin from 203.0.113.9 port 40122', PINK],
   ['Failed password for invalid user admin from 203.0.113.9 port 40122', PINK],
@@ -1099,7 +1099,7 @@ const AUTH_LOG = [
   ['fail2ban.actions: [sshd] Ban 198.51.100.23', '#ffc145'],
   ['Received disconnect from 192.0.2.44 port 52011:11: see you next meetup', MUTED],
 ]
-const LINK_RATE = 5
+export const LINK_RATE = 5
 
 // Traffic follows the terminal: transmit while a command is typed, receive while its output prints.
 function sessionActivity(time) {
@@ -1113,7 +1113,7 @@ function sessionActivity(time) {
   return { tx, rx }
 }
 // Mostly steady latency with jitter, plus the odd congestion spike of random height and length.
-function linkRtt(sample) {
+export function linkRtt(sample) {
   const window = Math.floor(sample / 11)
   const length = 4 + Math.floor(noise(window * 5.3 + 1.7) * 7)
   const into = sample - window * 11
@@ -1386,7 +1386,7 @@ const ROW_HEIGHT = 6
 const ROWS_PER_SECOND = 6
 const LOGO_BIN = 19
 const LOGO_STARTS = [2, 13.5].map(seconds => Math.round(seconds * ROWS_PER_SECOND))
-const WATERFALL = ['#061015', '#08181e', '#0b2128', '#0f2c33', '#143b40', '#1b4d4f', '#24625d', '#317a6a', '#479374', '#68ad7d', '#94cb84', '#ccff8b']
+export const WATERFALL = ['#061015', '#08181e', '#0b2128', '#0f2c33', '#143b40', '#1b4d4f', '#24625d', '#317a6a', '#479374', '#68ad7d', '#94cb84', '#ccff8b']
 const frequency = bin => (432.72 + bin * 0.015).toFixed(2)
 
 function logoRow(sample) {

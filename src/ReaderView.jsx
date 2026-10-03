@@ -1,5 +1,5 @@
 import { Fragment } from 'react'
-import { hasAbstract } from './events.js'
+import { hasAbstract, abstractParagraphs, eventDetails } from './events.js'
 import './ReaderView.css'
 
 // Plain, table-based page for the reader theme.
@@ -30,13 +30,9 @@ export default function ReaderView({ currentEvent, pastEvents, registerUrl, expa
           {expanded && (
             <tr className="reader-abstract">
               <td colSpan={3}>
-                {talk.description.split('\n\n').map((paragraph, index) => {
-                  if (paragraph.startsWith('__SLIDES__')) {
-                    const url = paragraph.replace('__SLIDES__', '')
-                    return <p key={index}>Slides: <a href={url} target="_blank" rel="noopener noreferrer">{url}</a></p>
-                  }
-                  return <p key={index}>{paragraph}</p>
-                })}
+                {abstractParagraphs(talk).map(({ text, slides }, index) => slides
+                  ? <p key={index}>Slides: <a href={slides} target="_blank" rel="noopener noreferrer">{slides}</a></p>
+                  : <p key={index}>{text}</p>)}
               </td>
             </tr>
           )}
@@ -72,7 +68,7 @@ export default function ReaderView({ currentEvent, pastEvents, registerUrl, expa
 
       <h2>{currentEvent.name}</h2>
       <p>
-        {currentEvent.details}.{' '}
+        {eventDetails(currentEvent)}.{' '}
         <a href={registerUrl} target="_blank" rel="noopener noreferrer">Register</a>
       </p>
       <table>
@@ -87,7 +83,7 @@ export default function ReaderView({ currentEvent, pastEvents, registerUrl, expa
           <tbody key={event.id}>
             <tr>
               <th scope="rowgroup" colSpan={3} className="reader-event">
-                {event.name} &mdash; {event.details}
+                {event.name} &mdash; {eventDetails(event)}
               </th>
             </tr>
             {talkRows(event)}

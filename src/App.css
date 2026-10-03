@@ -25,8 +25,10 @@
   background: linear-gradient(135deg, #2d1b69 0%, #1a103f 50%, #0f0a2e 100%);
 }
 
-.app.theme-green {
-  background: linear-gradient(135deg, #0a2e1c 0%, #051a0f 50%, #020d06 100%);
+.app.theme-signal {
+  display: block;
+  padding: 0;
+  background: #050a0d;
 }
 
 .app.theme-purple {
@@ -73,18 +75,28 @@
   box-shadow: 0 0 15px rgba(0, 255, 255, 0.7);
 }
 
-.theme-green .theme-btn {
-  border-color: #00ff00;
-  color: #00ff00;
+.theme-signal .theme-switcher {
+  position: absolute;
+  top: 16px;
+  left: 16px;
 }
 
-.theme-green .theme-btn:hover {
-  box-shadow: 0 0 10px rgba(0, 255, 0, 0.5);
+.theme-signal .theme-btn {
+  border-color: #2e474f;
+  border-radius: 0;
+  background: #050a0d;
+  color: #6fe7e7;
 }
 
-.theme-green .theme-btn.active {
-  background: rgba(0, 255, 0, 0.2);
-  box-shadow: 0 0 15px rgba(0, 255, 0, 0.7);
+.theme-signal .theme-btn:hover {
+  border-color: #6fe7e7;
+  box-shadow: none;
+}
+
+.theme-signal .theme-btn.active {
+  background: #6fe7e7;
+  color: #050a0d;
+  box-shadow: none;
 }
 
 .theme-purple .theme-btn {
@@ -101,115 +113,6 @@
   background: #333333;
   color: #ffffff;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
-}
-
-/* Theme-specific color adjustments */
-
-/* Green theme - uses Unifont */
-.theme-green * {
-  font-family: 'Unifont', monospace !important;
-}
-.theme-green .ascii-art,
-.theme-green .info-header,
-.theme-green .event-details,
-.theme-green .toggle-icon,
-.theme-green .talk-description {
-  color: #00ff00;
-}
-
-.theme-green .ascii-art::after {
-  color: #00ff00;
-}
-
-.theme-green .text-line,
-.theme-green .event-details h2,
-.theme-green .talk-title {
-  color: #40ff40;
-}
-
-.theme-green .talk-speaker {
-  color: #80ff80;
-}
-
-.theme-green .memory-address {
-  color: #40ff40;
-}
-
-.theme-green .memory-address::before,
-.theme-green .memory-address::after {
-  color: #00ff00;
-}
-
-.theme-green .talk-box {
-  border-color: #00ff00;
-}
-
-.theme-green .talk-box:hover {
-  box-shadow: 0 0 10px rgba(0, 255, 0, 0.5);
-}
-
-.theme-green .event-details a {
-  color: #40ff40;
-  text-decoration: underline;
-}
-
-.theme-green .event-details a:hover {
-  color: #80ff80;
-}
-
-.theme-green .register-button {
-  background: transparent;
-  border-color: #00ff00;
-  color: #00ff00;
-}
-
-.theme-green .register-button:hover {
-  background: rgba(0, 255, 0, 0.2);
-  border-color: #00ff00;
-}
-
-.theme-green .register-countdown {
-  color: #00ff00;
-  border-color: #00ff00;
-  text-shadow: 0 0 5px rgba(0, 255, 0, 0.5);
-}
-
-.theme-green .older-events-section {
-  border-top-color: #00ff00;
-}
-
-.theme-green .older-events-header:hover {
-  background: rgba(0, 255, 0, 0.1);
-}
-
-.theme-green .older-events-header h3 {
-  color: #40ff40;
-}
-
-.theme-green .talk-star {
-  color: #00ff00;
-}
-
-.theme-green .talk-star:nth-child(3n) {
-  color: #80ff80;
-}
-
-.theme-green .talk-star:nth-child(3n+1) {
-  color: #00ff00;
-}
-
-.theme-green .talk-star:nth-child(3n+2) {
-  color: #40ff40;
-}
-
-.theme-green .matrix-char {
-  color: #00ff00;
-  text-shadow: 0 0 5px rgba(0, 255, 0, 0.7);
-}
-
-.theme-green .matrix-char:first-child {
-  color: #ffffff;
-  text-shadow: 0 0 8px rgba(255, 255, 255, 0.9);
 }
 
 /* Purple theme - Reader mode: a plain white page, see ReaderView.css */

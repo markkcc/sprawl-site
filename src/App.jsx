@@ -3,12 +3,13 @@ import './App.css'
 import EventShow from './EventShow.jsx'
 import CoinIntro from './CoinIntro.jsx'
 import ReaderView from './ReaderView.jsx'
-import { REGISTER_URL, currentEvent, pastEvents, hasAbstract } from './events.js'
+import SignalView from './SignalView.jsx'
+import { REGISTER_URL, currentEvent, pastEvents, hasAbstract, abstractParagraphs, eventDetails } from './events.js'
 
 function App() {
   const [memoryAddresses, setMemoryAddresses] = useState([])
   const [expandedTalks, setExpandedTalks] = useState({})
-  const [currentTheme, setCurrentTheme] = useState('default')
+  const [currentTheme, setCurrentTheme] = useState('signal')
   const [olderEventsExpanded, setOlderEventsExpanded] = useState(false)
   const [launcherVisible, setLauncherVisible] = useState(false)
   const [stars, setStars] = useState([])
@@ -141,21 +142,15 @@ function App() {
         </div>
         {expandedTalks[key] && (
           <div className="talk-description">
-            {hasAbstract(talk) ? talk.description.split('\n\n').map((paragraph, index) => {
-              if (paragraph.startsWith('__SLIDES__')) {
-                const url = paragraph.replace('__SLIDES__', '')
-                return (
-                  <p key={index} style={{ marginBottom: '1em', color: 'fuchsia' }}>
-                    Slides: <a href={url} target="_blank" rel="noopener noreferrer" style={{ color: 'fuchsia' }}>{url}</a>
-                  </p>
-                )
-              }
-              return (
-                <p key={index} style={{ marginBottom: '1em' }}>
-                  {paragraph}
-                </p>
-              )
-            }) : <p>-</p>}
+            {hasAbstract(talk) ? abstractParagraphs(talk).map(({ text, slides }, index) => slides ? (
+              <p key={index} style={{ marginBottom: '1em', color: 'fuchsia' }}>
+                Slides: <a href={slides} target="_blank" rel="noopener noreferrer" style={{ color: 'fuchsia' }}>{slides}</a>
+              </p>
+            ) : (
+              <p key={index} style={{ marginBottom: '1em' }}>
+                {text}
+              </p>
+            )) : <p>-</p>}
           </div>
         )}
       </>
@@ -183,9 +178,9 @@ function App() {
           𓁿
         </button>
         <button
-          className={`theme-btn ${currentTheme === 'green' ? 'active' : ''}`}
-          onClick={() => setCurrentTheme('green')}
-          aria-label="Unifont green theme"
+          className={`theme-btn ${currentTheme === 'signal' ? 'active' : ''}`}
+          onClick={() => setCurrentTheme('signal')}
+          aria-label="Signal theme"
         >
           𓆣
         </button>
@@ -200,6 +195,14 @@ function App() {
 
       {currentTheme === 'purple' ? (
         <ReaderView
+          currentEvent={currentEvent}
+          pastEvents={pastEvents}
+          registerUrl={REGISTER_URL}
+          expandedTalks={expandedTalks}
+          toggleTalk={toggleTalk}
+        />
+      ) : currentTheme === 'signal' ? (
+        <SignalView
           currentEvent={currentEvent}
           pastEvents={pastEvents}
           registerUrl={REGISTER_URL}
@@ -243,7 +246,7 @@ function App() {
           {/* Upcoming event */}
           <div className="event-details">
             <h2>-- {currentEvent.name} --</h2>
-            <div>{currentEvent.details}</div>
+            <div>{eventDetails(currentEvent)}</div>
             <a href="#" className="register-button" onClick={handleRegisterClick}>
               Register
             </a>
@@ -321,7 +324,7 @@ function App() {
                   <Fragment key={event.id}>
                     <div className="event-details">
                       <h2>-- {event.name} --</h2>
-                      <div>{event.details}</div>
+                      <div>{eventDetails(event)}</div>
                     </div>
 
                     <div className="talks-container">

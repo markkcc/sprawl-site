@@ -3,7 +3,8 @@ import { createPortal, flushSync } from 'react-dom'
 import { drawShow, sceneAt, SCENES } from './eventShowRenderer.js'
 import './EventShow.css'
 
-export default function EventShow({ launcherVisible = true }) {
+// A page can restyle the launcher by passing its own class and label as children.
+export default function EventShow({ launcherVisible = true, launcherClassName, children }) {
   const [open, setOpen] = useState(false)
   const [locked, setLocked] = useState(false)
   const screen = useRef(null)
@@ -151,12 +152,14 @@ export default function EventShow({ launcherVisible = true }) {
     <button
       ref={launch}
       id="event-show-launch"
-      className={`event-show-launch${launcherVisible ? '' : ' is-hidden'}`}
+      className={launcherClassName ?? `event-show-launch${launcherVisible ? '' : ' is-hidden'}`}
       onClick={start}
       aria-label="Launch event visuals (fullscreen, Escape to exit)"
     >
-      <span aria-hidden="true">▶</span> <span className="event-show-launch-verb">Launch </span>event visuals
-      <span className="event-show-launch-detail">FULLSCREEN / ESC TO EXIT</span>
+      {children ?? <>
+        <span aria-hidden="true">▶</span> <span className="event-show-launch-verb">Launch </span>event visuals
+        <span className="event-show-launch-detail">FULLSCREEN / ESC TO EXIT</span>
+      </>}
     </button>
     {open && createPortal(
       <div ref={screen} className="event-show" role="dialog" aria-modal="true" aria-label="SPRAWL event visuals" tabIndex={-1}>

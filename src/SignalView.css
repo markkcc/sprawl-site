@@ -1,0 +1,683 @@
+/* Palette and type follow the fullscreen event visuals (eventShowRenderer.js). */
+.signal {
+  --ink: #050a0d;
+  --panel: #071016;
+  --line: #1d2a30;
+  --line-bright: #2e474f;
+  --text: #c8d2d5;
+  --muted: #638387;
+  --green: #ccff8b;
+  --cyan: #6fe7e7;
+  --fuchsia: #ff4fd8;
+  --amber: #e8c46a;
+  --hover: #0f2c33;
+  color-scheme: dark;
+  min-height: 100vh;
+  background: var(--ink);
+  color: var(--text);
+  font-family: 'Unifont', monospace;
+  font-size: 18px;
+  line-height: 1.5;
+}
+
+.signal a {
+  color: var(--cyan);
+}
+
+.signal a:hover {
+  color: var(--green);
+}
+
+.signal :focus-visible {
+  outline: 2px solid var(--fuchsia);
+  outline-offset: 2px;
+}
+
+/* index.css rings every focused button; only keyboard focus should show one here. */
+.signal button:focus:not(:focus-visible) {
+  outline: none;
+}
+
+/* Status bars, after tmux. The theme switcher sits over the left end of the top bar. */
+.signal-bar {
+  display: flex;
+  align-items: center;
+  gap: 2ch;
+  padding: 0 16px;
+  font-size: 16px;
+  color: var(--muted);
+}
+
+.signal-top {
+  min-height: 72px;
+  padding-left: 168px;
+  border-bottom: 1px solid var(--line);
+}
+
+.signal-session {
+  color: var(--ink);
+  background: var(--green);
+  padding: 0 1ch;
+}
+
+.signal-tabs {
+  display: flex;
+  gap: 2ch;
+}
+
+.signal-tabs a {
+  color: var(--muted);
+  text-decoration: none;
+}
+
+.signal-tabs a:first-child {
+  color: var(--green);
+}
+
+.signal-tabs a:hover {
+  color: var(--cyan);
+}
+
+.signal-play {
+  margin: 0 0 0 auto;
+  padding: 4px 1.5ch;
+  border: 1px solid var(--fuchsia);
+  border-radius: 0;
+  background: transparent;
+  font: inherit;
+  color: var(--fuchsia);
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.signal-play:hover {
+  background: var(--fuchsia);
+  border-color: var(--fuchsia);
+  color: var(--ink);
+}
+
+.signal-clock {
+  color: var(--cyan);
+  white-space: nowrap;
+}
+
+.signal-live {
+  color: var(--fuchsia);
+  animation: signal-pulse 2s ease-in-out infinite;
+}
+
+.signal-bottom {
+  justify-content: space-between;
+  min-height: 48px;
+  border-top: 1px solid var(--line);
+}
+
+.signal-main {
+  max-width: 72rem;
+  margin: 0 auto;
+  padding: 8px 16px 32px;
+}
+
+/* Panels carry their title in the top border, like btop. */
+.signal-panel {
+  position: relative;
+  margin-top: 32px;
+  padding: 24px 16px 16px;
+  border: 1px solid var(--line-bright);
+  border-radius: 6px;
+  background: var(--panel);
+}
+
+.signal-title {
+  position: absolute;
+  top: -0.75em;
+  left: 12px;
+  margin: 0;
+  padding: 0 1ch;
+  background: var(--ink);
+  font-size: 16px;
+  font-weight: normal;
+  color: var(--cyan);
+}
+
+.signal-title span {
+  color: var(--muted);
+}
+
+.signal-title span:not(.signal-live, .signal-beat)::before {
+  content: '· ';
+}
+
+.signal-spectrum {
+  padding-bottom: 12px;
+}
+
+.analyzer,
+.waterfall {
+  display: block;
+  width: 100%;
+  border: 1px solid var(--line);
+}
+
+.analyzer {
+  height: 56px;
+  border-bottom: none;
+}
+
+.waterfall {
+  height: 200px;
+  image-rendering: pixelated;
+}
+
+.signal-axis {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 6px;
+  font-size: 16px;
+  color: var(--muted);
+}
+
+.signal-marker {
+  color: var(--green);
+}
+
+.signal-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
+  gap: 0 24px;
+}
+
+.signal-name {
+  margin: 0;
+  font-size: 32px;
+  font-weight: normal;
+  line-height: 1.2;
+  letter-spacing: 0.1em;
+  color: var(--green);
+  text-shadow: 0 0 12px rgba(204, 255, 139, 0.35);
+}
+
+.signal-tagline {
+  margin: 4px 0 16px;
+  color: var(--fuchsia);
+}
+
+.signal-readme {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.signal-readme li {
+  padding-left: 2ch;
+  text-indent: -2ch;
+}
+
+.signal-readme li::before {
+  content: '> ';
+  color: var(--muted);
+}
+
+.signal-cursor {
+  display: inline-block;
+  width: 0.6em;
+  height: 1em;
+  margin-left: 0.5ch;
+  vertical-align: -0.15em;
+  background: var(--green);
+  animation: signal-blink 1s steps(1) infinite;
+}
+
+.signal-event-name {
+  margin: 0 0 12px;
+  font-size: 32px;
+  line-height: 1.2;
+  color: var(--cyan);
+  text-shadow: 0 0 12px rgba(111, 231, 231, 0.35);
+}
+
+.signal-facts {
+  display: grid;
+  grid-template-columns: 6ch minmax(0, 1fr);
+  margin: 0 0 20px;
+}
+
+.signal-facts dt {
+  color: var(--muted);
+}
+
+.signal-facts dd {
+  margin: 0;
+}
+
+.signal-eta {
+  color: var(--amber);
+}
+
+/* The upcoming event is the one panel lit up: green frame, slow glow, solid title. */
+.signal-next {
+  border-color: var(--green);
+  animation: signal-glow 3s ease-in-out infinite;
+}
+
+.signal-next .signal-title {
+  background: var(--green);
+  color: var(--ink);
+}
+
+.signal-next .signal-live {
+  color: var(--ink);
+}
+
+.signal-next .signal-eta {
+  font-size: 32px;
+  line-height: 1.2;
+  text-shadow: 0 0 12px rgba(232, 196, 106, 0.4);
+}
+
+.signal-next .signal-facts {
+  align-items: baseline;
+}
+
+/* A Turbo Vision style button: solid face with a hard shadow that it loses when pressed. */
+.signal-register {
+  display: inline-block;
+  padding: 8px 3ch;
+  background: var(--green);
+  box-shadow: 6px 6px 0 var(--hover);
+  color: var(--ink) !important;
+  text-decoration: none;
+}
+
+.signal-register:hover {
+  background: var(--fuchsia);
+}
+
+.signal-register:active {
+  transform: translate(6px, 6px);
+  box-shadow: none;
+}
+
+/* Talks as a process table, after htop. */
+.signal-table-head,
+.signal-row .signal-talk-line {
+  display: grid;
+  grid-template-columns: 7ch minmax(0, 1fr) minmax(0, 15em) 4ch;
+  gap: 2ch;
+}
+
+.signal-table-head {
+  padding: 0 8px;
+  background: var(--green);
+  color: var(--ink);
+  font-size: 16px;
+}
+
+.signal-table,
+.signal-tree,
+.signal-tree ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.signal-talk-line {
+  width: 100%;
+  margin: 0;
+  padding: 8px;
+  border: none;
+  border-radius: 0;
+  background: none;
+  font: inherit;
+  line-height: 1.5;
+  color: inherit;
+  text-align: left;
+}
+
+button.signal-talk-line {
+  cursor: pointer;
+}
+
+button.signal-talk-line:hover {
+  background: var(--hover);
+}
+
+.signal-row + .signal-row {
+  border-top: 1px solid var(--line);
+}
+
+.is-open > .signal-talk-line {
+  background: var(--hover);
+}
+
+.signal-pid {
+  color: var(--fuchsia);
+}
+
+.signal-talk-title {
+  color: #ffffff;
+}
+
+.signal-speaker {
+  color: var(--cyan);
+}
+
+.signal-state {
+  color: var(--muted);
+  text-align: right;
+}
+
+button.signal-talk-line .signal-state,
+.is-open .signal-state {
+  color: var(--green);
+}
+
+.signal-abstract {
+  margin: 0 8px 12px;
+  padding: 8px 2ch;
+  border-left: 2px solid var(--fuchsia);
+  color: var(--text);
+  line-height: 1.6;
+  overflow-wrap: anywhere;
+  animation: signal-fade 0.25s ease;
+}
+
+.signal-abstract p {
+  margin: 0 0 1em;
+}
+
+.signal-abstract p:last-child {
+  margin-bottom: 0;
+}
+
+/* The archive as `tree` output, with the branch lines drawn in CSS so long titles can wrap. */
+.signal-prompt {
+  margin: 0 0 8px;
+  color: var(--muted);
+}
+
+.signal-prompt span {
+  color: var(--green);
+}
+
+.signal-tree li {
+  --branch: calc(8px + 0.75em); /* middle of the row's first text line */
+  display: flow-root; /* keeps an open abstract's margin inside, so branch lines stay unbroken */
+  position: relative;
+  padding-left: 4ch;
+}
+
+.signal-tree .signal-tree-talk {
+  --branch: calc(4px + 0.75em);
+}
+
+.signal-tree li::before {
+  content: '';
+  position: absolute;
+  left: 1ch;
+  top: 0;
+  bottom: 0;
+  border-left: 1px solid var(--line-bright);
+}
+
+.signal-tree li:last-child::before {
+  bottom: auto;
+  height: var(--branch);
+}
+
+.signal-tree li::after {
+  content: '';
+  position: absolute;
+  left: 1ch;
+  top: var(--branch);
+  width: 2.5ch;
+  border-top: 1px solid var(--line-bright);
+}
+
+.signal-tree-event {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 2ch;
+  padding-top: 8px;
+}
+
+.signal-tree-event time {
+  color: var(--green);
+}
+
+.signal-tree-talk .signal-talk-line {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 15em) 4ch;
+  gap: 2ch;
+  padding: 4px 8px;
+}
+
+/* Link telemetry, after the terminal scene: round-trip time beside RX/TX traffic. */
+.signal-link {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0 32px;
+}
+
+.signal-link-label,
+.signal-link-stat {
+  margin: 0;
+  font-size: 16px;
+  color: var(--muted);
+}
+
+.signal-link-stat {
+  margin-top: 4px;
+  color: var(--text);
+  white-space: pre;
+}
+
+.signal-link-stat.is-spike {
+  color: var(--amber);
+}
+
+.signal-graph {
+  display: block;
+  width: 100%;
+  height: 72px;
+}
+
+/* A heartbeat beside the link title, as in the scene's corner. */
+.signal-beat {
+  display: inline-block;
+  position: relative;
+  width: 6px;
+  height: 6px;
+  margin-left: 1ch;
+  vertical-align: 0.1em;
+  border-radius: 50%;
+  background: var(--green);
+}
+
+.signal-title .signal-beat::before {
+  content: '';
+  position: absolute;
+  inset: -4px;
+  border-radius: 50%;
+  background: var(--green);
+  animation: signal-beat 2s ease-out infinite;
+}
+
+/* The auth log shows six lines; each new one slides the rest up a row. */
+.signal-log-window {
+  height: 9em; /* six lines at line-height 1.5 */
+  overflow: hidden;
+  font-size: 16px;
+}
+
+.signal-log {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  animation: signal-log-slide 0.4s ease-out;
+}
+
+.signal-log li {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.signal-log-time {
+  margin-right: 2ch;
+  color: #4d6a68;
+}
+
+@keyframes signal-log-slide {
+  from {
+    transform: translateY(1.5em);
+  }
+}
+
+@keyframes signal-beat {
+  from {
+    opacity: 0.5;
+    transform: scale(0.5);
+  }
+  to {
+    opacity: 0;
+    transform: scale(1.6);
+  }
+}
+
+@keyframes signal-blink {
+  50% {
+    opacity: 0;
+  }
+}
+
+@keyframes signal-glow {
+  0%, 100% {
+    box-shadow: 0 0 12px rgba(204, 255, 139, 0.15), inset 0 0 12px rgba(204, 255, 139, 0.04);
+  }
+  50% {
+    box-shadow: 0 0 28px rgba(204, 255, 139, 0.35), inset 0 0 20px rgba(204, 255, 139, 0.08);
+  }
+}
+
+@keyframes signal-pulse {
+  50% {
+    opacity: 0.3;
+  }
+}
+
+@keyframes signal-fade {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .signal-cursor,
+  .signal-live,
+  .signal-abstract,
+  .signal-log,
+  .signal-title .signal-beat::before {
+    animation: none;
+  }
+
+  .signal-next {
+    animation: none;
+    box-shadow: 0 0 20px rgba(204, 255, 139, 0.25);
+  }
+}
+
+@media (max-width: 720px) {
+  .signal-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .signal-session,
+  .signal-tabs,
+  .signal-play-verb,
+  .signal-clock-city {
+    display: none;
+  }
+
+  .signal-top {
+    gap: 1.5ch;
+  }
+
+  .analyzer {
+    height: 44px;
+  }
+
+  .signal-link {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 16px;
+  }
+
+  .waterfall {
+    height: 140px;
+  }
+
+  .signal-panel {
+    padding: 20px 12px 12px;
+  }
+
+  .signal-abstract {
+    margin: 0 0 12px;
+    padding: 8px 0 8px 1.5ch;
+  }
+
+  .signal-table-head {
+    display: none;
+  }
+
+  .signal-row .signal-talk-line {
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas:
+      'pid state'
+      'title title'
+      'speaker speaker';
+    gap: 0 2ch;
+  }
+
+  .signal-row .signal-pid {
+    grid-area: pid;
+  }
+
+  .signal-row .signal-talk-title,
+  .signal-tree-talk .signal-talk-title {
+    grid-area: title;
+  }
+
+  .signal-row .signal-speaker,
+  .signal-tree-talk .signal-speaker {
+    grid-area: speaker;
+  }
+
+  .signal-row .signal-state,
+  .signal-tree-talk .signal-state {
+    grid-area: state;
+  }
+
+  .signal-tree-talk .signal-talk-line {
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas:
+      'title state'
+      'speaker speaker';
+    gap: 0 2ch;
+  }
+
+  .signal-tree li {
+    padding-left: 3ch;
+  }
+
+  .signal-tree li::after {
+    width: 1.5ch;
+  }
+}
+
+/* Too narrow for the clock beside the theme buttons and the visuals button. */
+@media (max-width: 380px) {
+  .signal-clock {
+    display: none;
+  }
+}
