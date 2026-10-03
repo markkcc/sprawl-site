@@ -160,7 +160,7 @@ export default function EventShow({ launcherVisible = true }) {
     </button>
     {open && createPortal(
       <div ref={screen} className="event-show" role="dialog" aria-modal="true" aria-label="SPRAWL event visuals" tabIndex={-1}>
-        <canvas ref={canvas} aria-label="Looping NYC cyberpunk visuals: the SPRAWL challenge coin's circuit-traced Statue of Liberty rebuilt in glitching ASCII, rotating SPRAWL ASCII art, an ASCII New York skyline with the Brooklyn Bridge, neon signs and radio signals, simulated Turbo Vision desktop, subway signal-tracking board, hacker terminal, a Neuromancer-inspired wireframe city with a scrolling William Gibson passage, a radio spectrum waterfall, a neon ASCII pin tumbler lock being picked until it glitches and explodes open, a circuit board booting over a UART debug port, and Conway's Game of Life with a glider gun." role="img" />
+        <canvas ref={canvas} aria-label="Looping NYC cyberpunk visuals: the SPRAWL challenge coin's circuit-traced Statue of Liberty rebuilt in glitching ASCII, rotating SPRAWL ASCII art, an ASCII New York skyline with the Brooklyn Bridge, neon signs and radio signals, simulated Turbo Vision desktop, subway signal-tracking board, hacker terminal with SSH session telemetry and a scrolling auth log, a Neuromancer-inspired wireframe city with a scrolling William Gibson passage, a radio spectrum waterfall, a btop-style system monitor with live graphs and a meetup-themed process list, a circuit board booting over a UART debug port, and Conway's Game of Life with a glider gun." role="img" />
         <div className="event-show-controls">
           <button
             ref={lock}

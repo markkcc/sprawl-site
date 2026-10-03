@@ -1,4 +1,4 @@
-// All scenes are local, deterministic canvas graphics. No network; the only live input is the local date in the banner.
+// All scenes are local, deterministic canvas graphics. No network; the only live input is the local clock (banner date, monitor time).
 import { LIBERTY_CHARS, LIBERTY_TINTS } from './libertyAscii.js'
 
 const W = 1440
@@ -39,7 +39,7 @@ export const SCENES = [
   { name: 'AFTER HOURS / TERMINAL SESSION', duration: 26, draw: terminal },
   { name: 'NEUROMANCER / NEW YORK CONSTRUCT', duration: 32, draw: neuromancer },
   { name: 'RADIO FREQUENCY / SPECTRUM WATERFALL', duration: 26, draw: spectrum },
-  { name: 'PHYSICAL LAYER / PIN TUMBLER', duration: 28, draw: lockpick },
+  { name: 'PROCESS MONITOR / SPRAWL-0X9', duration: 28, draw: monitor },
   { name: 'HARDWARE / UART DEBUG PORT', duration: 26, draw: hardware },
   { name: 'GAME OF LIFE / GLIDER GUN', duration: 26, draw: life },
 ]
@@ -470,7 +470,7 @@ function skyline(ctx, t) {
     ctx.fillStyle = beam
     ctx.fill()
   }
-  caption(ctx, `${sceneNumber(skyline)}   /   ESTABLISHING CONNECTION`, 'THE CITY NEVER IDLES.', 'NEW YORK, NY     /     FIVE BOROUGHS. INFINITE CONNECTIONS.')
+  caption(ctx, `${sceneNumber(skyline)}   /   ESTABLISHING CONNECTION`, 'WE HAVE SIGNAL.', 'NEW YORK, NY     /     FIVE BOROUGHS. INFINITE CONNECTIONS.')
   drawCity(ctx)
   const { lit, antennas, empireTip, wtcTip } = cityModel
 
@@ -680,6 +680,131 @@ const BLOCKS = 10
 const OCCUPIED = '#ff4b3e'
 const ASPECTS = { stop: OCCUPIED, approach: '#ffc145', clear: '#4fe08a' }
 const trainId = (route, i) => `${route.name}-${String(i * 11 + 2).padStart(2, '0')}`
+// Target scan: the reticle visits real stations on matching lines and locks onto each meetup.
+const TARGETS = [
+  { route: 0, stop: 2, name: 'CHRISTOPHER ST', label: [44, -92] },
+  { route: 1, stop: 3, name: 'CANAL ST', label: [48, -104] },
+  { route: 2, stop: 3, name: 'BEDFORD AV', label: [52, -66] },
+  { route: 4, stop: 4, name: 'COURT SQ', label: [44, 30] },
+]
+const TARGET_START = 1
+const TARGET_SPAN = 5.5
+const TARGET_TRAVEL = 1
+const TARGET_LOCK = 3
+const targetAt = ({ route, stop }) => routePosition(ROUTES[route].points, stop / 5)
+
+function targetState(t) {
+  const index = Math.min(TARGETS.length - 1, Math.max(0, Math.floor((t - TARGET_START) / TARGET_SPAN)))
+  const local = t - TARGET_START - index * TARGET_SPAN
+  const [tx, ty] = targetAt(TARGETS[index])
+  const [fx, fy] = index ? targetAt(TARGETS[index - 1]) : [720, 470]
+  const travel = ease(local / TARGET_TRAVEL)
+  return {
+    index,
+    local,
+    x: fx + (tx - fx) * travel,
+    y: fy + (ty - fy) * travel,
+    progress: Math.min(1, Math.max(0, (local - TARGET_TRAVEL) / (TARGET_LOCK - TARGET_TRAVEL))),
+    locked: local >= TARGET_LOCK,
+  }
+}
+
+function brackets(ctx, x, y, radius, angle, color, width) {
+  ctx.save()
+  ctx.translate(x, y)
+  ctx.rotate(angle)
+  ctx.strokeStyle = color
+  ctx.lineWidth = width
+  ctx.shadowColor = color
+  ctx.shadowBlur = 8
+  for (let k = 0; k < 4; k++) {
+    ctx.rotate(Math.PI / 2)
+    ctx.beginPath()
+    ctx.moveTo(-radius, -radius + radius * 0.55)
+    ctx.lineTo(-radius, -radius)
+    ctx.lineTo(-radius + radius * 0.55, -radius)
+    ctx.stroke()
+  }
+  ctx.restore()
+}
+
+function drawTargeting(ctx, t) {
+  if (t < TARGET_START) return
+  const scan = targetState(t)
+  const target = TARGETS[scan.index]
+  const route = ROUTES[target.route]
+  const tone = scan.locked ? FUCHSIA : '#ffc145'
+
+  // Stations already locked this cycle keep a marker.
+  TARGETS.slice(0, scan.index).forEach(done => {
+    const [x, y] = targetAt(done)
+    brackets(ctx, x, y, 12, 0, `${FUCHSIA}aa`, 1.5)
+    dot(ctx, x, y, 3, FUCHSIA)
+  })
+
+  if (!scan.locked) {
+    // Acquiring: brackets spin and close in while a progress ring fills.
+    const radius = 58 - 36 * ease(scan.progress)
+    brackets(ctx, scan.x, scan.y, radius, (1 - scan.progress) * Math.PI * 1.5 + t * 0.6, tone, 2)
+    if (scan.progress > 0) {
+      ctx.save()
+      ctx.strokeStyle = `${tone}cc`
+      ctx.lineWidth = 2
+      ctx.beginPath()
+      ctx.arc(scan.x, scan.y, radius + 10, -Math.PI / 2, -Math.PI / 2 + scan.progress * Math.PI * 2)
+      ctx.stroke()
+      ctx.restore()
+    }
+    dot(ctx, scan.x, scan.y, 2.5, tone)
+  } else {
+    // Locked: brackets snap square with a pulse ring, then the detection card.
+    const since = scan.local - TARGET_LOCK
+    brackets(ctx, scan.x, scan.y, 18 + 6 * Math.max(0, 1 - since * 4), 0, tone, 2.5)
+    if (since < 0.8) {
+      ctx.save()
+      ctx.globalAlpha *= 1 - since / 0.8
+      ctx.strokeStyle = FUCHSIA
+      ctx.lineWidth = 2
+      ctx.beginPath()
+      ctx.arc(scan.x, scan.y, 20 + since * 90, 0, Math.PI * 2)
+      ctx.stroke()
+      ctx.restore()
+    }
+    dot(ctx, scan.x, scan.y, 3.5, FUCHSIA)
+  }
+
+  // The readout card, joined to the target by a leader line.
+  const [dx, dy] = target.label
+  const cx = scan.x + dx
+  const cy = scan.y + dy
+  if (scan.local >= TARGET_TRAVEL) {
+    line(ctx, scan.x + Math.sign(dx) * 14, scan.y + Math.sign(dy) * 14, cx, cy + 30, `${tone}aa`)
+    box(ctx, cx, cy, 240, 62, '#06090ef2', tone)
+    if (scan.locked) {
+      ctx.save()
+      ctx.shadowColor = FUCHSIA
+      ctx.shadowBlur = 14
+      box(ctx, cx, cy, 240, 22, FUCHSIA)
+      ctx.restore()
+      text(ctx, 'SPRAWL MEETUP DETECTED', cx + 120, cy + 3, 16, INK, 'center')
+      dot(ctx, cx + 18, cy + 38, 8, route.color)
+      text(ctx, route.name, cx + 18, cy + 30, 14, INK, 'center')
+      text(ctx, target.name, cx + 34, cy + 31, 16, '#e0efec')
+      text(ctx, 'LOCKED', cx + 228, cy + 31, 14, GREEN, 'right')
+    } else {
+      const bars = Math.round(scan.progress * 12)
+      text(ctx, 'ACQUIRING TARGET', cx + 12, cy + 6, 16, tone)
+      text(ctx, `${String(Math.round(scan.progress * 100)).padStart(3)}%`, cx + 228, cy + 6, 16, tone, 'right')
+      text(ctx, `${'▮'.repeat(bars)}${'▯'.repeat(12 - bars)}`, cx + 12, cy + 34, 16, tone)
+      text(ctx, `${route.name} LINE`, cx + 228, cy + 34, 14, MUTED, 'right')
+    }
+  }
+
+  // Scan status, top right.
+  text(ctx, `TARGET ${String(scan.index + 1).padStart(2, '0')} / ${String(TARGETS.length).padStart(2, '0')}`, 1376, 134, 18, '#e0efec', 'right')
+  text(ctx, scan.locked ? 'STATUS: LOCKED' : scan.local < TARGET_TRAVEL ? 'STATUS: TRACKING' : 'STATUS: ACQUIRING', 1376, 162, 16, tone, 'right')
+}
+
 function subway(ctx, t) {
   for (let x = 48; x < W; x += 32) for (let y = 110; y < 810; y += 32) dot(ctx, x, y, 1, '#173033')
   caption(ctx, `${sceneNumber(subway)}   /   METROPOLITAN AREA NETWORK`, 'LOCAL CONNECTIONS.', 'SIGNAL TRACKING  /  A SUBWAY-INSPIRED NETWORK')
@@ -730,6 +855,11 @@ function subway(ctx, t) {
     text(ctx, trainId(route, i), tx, ty - 7, 13, route.color, 'center')
     text(ctx, route.label, route.lx, route.ly, 18, route.color)
   }
+  if (t >= TARGET_START) {
+    const { x, y, locked } = targetState(t)
+    line(ctx, Math.max(48, x - 380), y, Math.min(W - 48, x + 380), y, locked ? '#ff4fd833' : '#ffc14533')
+    line(ctx, x, 290, x, 800, locked ? '#ff4fd833' : '#ffc14533')
+  }
   box(ctx, 69, 345, 318, 325, '#091215', '#355154')
   text(ctx, 'SPRAWL / TRANSIT AUTHORITY', 89, 366, 18, GREEN)
   if (Math.floor(t) % 2 === 0) dot(ctx, 360, 374, 4, OCCUPIED)
@@ -749,6 +879,7 @@ function subway(ctx, t) {
   })
   text(ctx, 'MANHATTAN', 930, 520, 18, GREEN)
   text(ctx, 'ALL NODES WELCOME.', 930, 550, 16, MUTED)
+  drawTargeting(ctx, t)
 }
 
 const COMMANDS = [
@@ -757,12 +888,74 @@ const COMMANDS = [
   { command: './boroughs --connect', output: ['[OK] Manhattan     [OK] Brooklyn     [OK] Queens', '[OK] Bronx         [OK] Staten Island', '5 / 5 boroughs connected. The city is listening.'] },
   { command: 'make tonight', output: ['Compiling conversations... done.', 'Linking people and ideas... done.', 'SPRAWL is ready. Talks begin soon.'] },
 ]
+// SSH telemetry beside the terminal: session details, host key randomart, link graphs and a live auth log.
+// The fingerprint is fictional; the randomart uses OpenSSH's drunken bishop walk over its bytes.
+const SSH_FINGERPRINT = Array.from({ length: 32 }, (_, i) => Math.floor(noise(i * 7.7 + 42) * 256))
+const SSH_FINGERPRINT_TEXT = `SHA256:${btoa(String.fromCharCode(...SSH_FINGERPRINT)).replace(/=+$/, '')}`
+const RANDOMART_SYMBOLS = ' .o+=*BOX@%&#/^'
+const RANDOMART_WALK = [[8, 4]]
+for (const byte of SSH_FINGERPRINT) {
+  for (let pair = 0; pair < 4; pair++) {
+    const bits = (byte >> (pair * 2)) & 3
+    const [x, y] = RANDOMART_WALK.at(-1)
+    RANDOMART_WALK.push([Math.max(0, Math.min(16, x + (bits & 1 ? 1 : -1))), Math.max(0, Math.min(8, y + (bits & 2 ? 1 : -1)))])
+  }
+}
+// Outside addresses come from the RFC 5737 documentation ranges.
+const AUTH_LOG = [
+  ['Accepted publickey for guest from 10.0.7.42 port 51515 ssh2: ED25519', GREEN],
+  ['Invalid user admin from 203.0.113.9 port 40122', PINK],
+  ['Failed password for invalid user admin from 203.0.113.9 port 40122', PINK],
+  ['pam_unix(sshd:session): session opened for user guest', MUTED],
+  ['Failed password for root from 198.51.100.23 port 33910 ssh2', PINK],
+  ['fail2ban.actions: [sshd] Ban 203.0.113.9', '#ffc145'],
+  ['Accepted publickey for speaker from 10.0.7.16 port 60022 ssh2: ED25519', GREEN],
+  ['Connection closed by authenticating user root 198.51.100.23 [preauth]', MUTED],
+  ['Accepted publickey for case from 10.0.7.31 port 41414 ssh2: ED25519', GREEN],
+  ['Invalid user ubnt from 203.0.113.77 port 22123', PINK],
+  ['fail2ban.actions: [sshd] Ban 198.51.100.23', '#ffc145'],
+  ['Received disconnect from 192.0.2.44 port 52011:11: see you next meetup', MUTED],
+]
+const LINK_RATE = 5
+
+// Traffic follows the terminal: transmit while a command is typed, receive while its output prints.
+function sessionActivity(time) {
+  let tx = 0
+  let rx = 0
+  COMMANDS.forEach(({ command, output }, i) => {
+    const local = time - i * 5.5
+    if (local >= 0 && local < command.length / 21) tx = 1
+    if (local >= 1.6 && local < 1.9 + output.length * 0.35) rx = 1
+  })
+  return { tx, rx }
+}
+// Mostly steady latency with jitter, plus the odd congestion spike of random height and length.
+function linkRtt(sample) {
+  const window = Math.floor(sample / 11)
+  const length = 4 + Math.floor(noise(window * 5.3 + 1.7) * 7)
+  const into = sample - window * 11
+  const spike = noise(window * 7.31 + 3.7) > 0.7 && into < length ? (14 + 46 * noise(window * 2.9 + 8.1)) * Math.sin(into / length * Math.PI) : 0
+  return 9.5 + 5 * smoothNoise(sample * 0.27) + 3 * noise(sample * 1.37) + spike
+}
+
+// Below 16px Chromium rounds Unifont advances per glyph, so grid art is placed one cell at a time.
+function gridText(ctx, value, x, y, size, color, cell) {
+  ;[...value].forEach((ch, i) => { if (ch !== ' ') text(ctx, ch, x + i * cell, y, size, color) })
+}
+
+function sshPanel(ctx, x, y, width, height, title, detail) {
+  box(ctx, x, y, width, height, '#07100e', '#35574a')
+  box(ctx, x, y, width, 28, '#193127')
+  text(ctx, title, x + 16, y + 6, 15, GREEN)
+  if (detail) text(ctx, detail, x + width - 16, y + 7, 13, MUTED, 'right')
+}
+
 function terminal(ctx, t) {
   caption(ctx, `${sceneNumber(terminal)}   /   ACCESS GRANTED`, 'WELCOME TO THE SPRAWL.', 'LOCAL SESSION  /  GUEST ACCESS  /  ALL CURIOSITIES WELCOME')
-  box(ctx, 64, 300, 920, 456, '#07100e', '#35574a')
-  box(ctx, 64, 300, 920, 35, '#193127')
+  box(ctx, 64, 300, 656, 456, '#07100e', '#35574a')
+  box(ctx, 64, 300, 656, 35, '#193127')
   text(ctx, 'guest@sprawl: ~', 84, 308, 18, GREEN)
-  text(ctx, 'PTY / 01', 962, 308, 16, MUTED, 'right')
+  text(ctx, 'PTY / 01', 700, 308, 16, MUTED, 'right')
   let y = 355
   COMMANDS.forEach(({ command, output }, i) => {
     const local = t - i * 5.5
@@ -780,17 +973,95 @@ function terminal(ctx, t) {
     })
     y += 8
   })
-  text(ctx, 'SYSTEM PULSE', 1030, 314, 18, GREEN)
-  for (let i = 0; i < 34; i++) {
-    const height = 15 + (Math.sin(i * 0.5 + t * 2) + 1) * 35 + noise(i) * 22
-    box(ctx, 1030 + i * 9, 469 - height, 5, height, i % 4 ? '#397c67' : GREEN)
+
+  // Session details and the host key's randomart, which walks itself in over the first few seconds.
+  sshPanel(ctx, 744, 300, 632, 176, 'sshd  /  session established', 'pts/0')
+  ;[
+    ['PEER', '10.0.7.42:51515  guest'],
+    ['KEX', 'mlkem768x25519-sha256'],
+    ['CIPHER', 'chacha20-poly1305'],
+    ['AUTH', 'publickey  ED25519'],
+    ['FPRINT', `${SSH_FINGERPRINT_TEXT.slice(0, 23)}…`],
+    ['CHAN', '1 session  2 forwards'],
+  ].forEach(([key, value], i) => {
+    text(ctx, key, 760, 342 + i * 21, 15, MUTED)
+    text(ctx, value, 836, 342 + i * 21, 15, key === 'AUTH' ? GREEN : '#c3d9d5')
+  })
+  const steps = Math.min(RANDOMART_WALK.length - 1, Math.floor(ease((t - 0.5) / 4) * (RANDOMART_WALK.length - 1)))
+  const counts = Array.from({ length: 9 }, () => Array(17).fill(0))
+  for (let i = 1; i <= steps; i++) counts[RANDOMART_WALK[i][1]][RANDOMART_WALK[i][0]]++
+  const art = counts.map((row, r) => row.map((count, c) => {
+    if (c === RANDOMART_WALK[0][0] && r === RANDOMART_WALK[0][1]) return 'S'
+    if (steps === RANDOMART_WALK.length - 1 && c === RANDOMART_WALK.at(-1)[0] && r === RANDOMART_WALK.at(-1)[1]) return 'E'
+    return RANDOMART_SYMBOLS[Math.min(count, RANDOMART_SYMBOLS.length - 1)]
+  }).join(''))
+  gridText(ctx, '+--[ED25519 256]--+', 1232, 332, 13, '#5d8f84', 6.5)
+  art.forEach((row, r) => {
+    gridText(ctx, `|${' '.repeat(17)}|`, 1232, 345 + r * 13, 13, '#5d8f84', 6.5)
+    gridText(ctx, ` ${row}`, 1232, 345 + r * 13, 13, '#9fe0b0', 6.5)
+  })
+  gridText(ctx, '+----[SHA256]-----+', 1232, 462, 13, '#5d8f84', 6.5)
+  if (steps < RANDOMART_WALK.length - 1) {
+    const [bx, by] = RANDOMART_WALK[steps]
+    box(ctx, 1232 + (bx + 1) * 6.5, 345 + by * 13, 6.5, 13, FUCHSIA)
   }
-  line(ctx, 1030, 483, 1355, 483, '#35574a')
-  text(ctx, 'HOST      NEW YORK CITY', 1030, 510, 18, MUTED)
-  text(ctx, 'STATUS    MAKING THINGS', 1030, 550, 18, MUTED)
-  text(ctx, 'UPTIME    AFTER HOURS', 1030, 590, 18, MUTED)
-  text(ctx, 'TRUST     YOUR CURIOSITY', 1030, 630, 18, MUTED)
-  text(ctx, '[ YOU BELONG HERE. ]', 1030, 710, 24, PINK)
+
+  // Link: round-trip time and traffic that tracks the terminal.
+  const sample = t * LINK_RATE
+  const now = Math.floor(sample)
+  sshPanel(ctx, 744, 490, 632, 132, 'link', 'ServerAliveInterval 15')
+  const rtts = Array.from({ length: 56 }, (_, i) => linkRtt(now - 55 + i))
+  const rttY = ms => 590 - Math.min(1, ms / 70) * 62
+  ctx.beginPath()
+  ctx.moveTo(760, 590)
+  rtts.forEach((ms, i) => ctx.lineTo(760 + i * 5, rttY(ms)))
+  ctx.lineTo(1035, 590)
+  ctx.closePath()
+  ctx.fillStyle = '#ccff8b1f'
+  ctx.fill()
+  ctx.beginPath()
+  rtts.forEach((ms, i) => i ? ctx.lineTo(760 + i * 5, rttY(ms)) : ctx.moveTo(760, rttY(ms)))
+  ctx.strokeStyle = GREEN
+  ctx.lineWidth = 1.5
+  ctx.stroke()
+  rtts.forEach((ms, i) => { if (ms > 30) dot(ctx, 760 + i * 5, rttY(ms), 2, '#ffc145') })
+  line(ctx, 760, 590, 1035, 590, '#35574a')
+  const p95 = [...rtts].sort((a, b) => a - b)[Math.floor(rtts.length * 0.95)]
+  text(ctx, `RTT ${rtts.at(-1).toFixed(1)} ms   p95 ${Math.round(p95)} ms`, 760, 598, 14, rtts.at(-1) > 30 ? '#ffc145' : '#c3d9d5')
+  line(ctx, 1072, 557, 1360, 557, '#35574a')
+  for (let i = 0; i < 58; i++) {
+    const s = now - 57 + i
+    const { tx, rx } = sessionActivity(s / LINK_RATE)
+    const down = 0.08 + 0.12 * noise(s * 1.7) + rx * (0.5 + 0.4 * noise(s * 3.1))
+    const upload = 0.05 + 0.08 * noise(s * 2.3) + tx * (0.35 + 0.35 * noise(s * 4.7))
+    box(ctx, 1072 + i * 5, 557 - down * 30, 3, down * 30, CYAN)
+    box(ctx, 1072 + i * 5, 558, 3, upload * 30, FUCHSIA)
+  }
+  text(ctx, `▲ RX ${(1.21 + t * 0.013).toFixed(2)} MiB   ▼ TX ${Math.round(286 + t * 3.1)} KiB`, 1072, 598, 14, '#c3d9d5')
+  const beat = (t % 2) / 2
+  dot(ctx, 1352, 605, 4 + beat * 6, `#ccff8b${Math.round((1 - beat) * 120).toString(16).padStart(2, '0')}`)
+  dot(ctx, 1352, 605, 3, GREEN)
+
+  // A live auth log; each new line slides the older ones up.
+  sshPanel(ctx, 744, 636, 632, 120, 'tail -f /var/log/auth.log', 'sshd[4242]')
+  const entry = Math.floor(t / 1.6)
+  const slide = 1 - ease(Math.min(1, (t / 1.6 - entry) * 4))
+  ctx.save()
+  ctx.beginPath()
+  ctx.rect(745, 665, 630, 90)
+  ctx.clip()
+  for (let k = 0; k < 6; k++) {
+    const index = entry - 5 + k
+    const [message, color] = AUTH_LOG[((index % AUTH_LOG.length) + AUTH_LOG.length) % AUTH_LOG.length]
+    const stamp = new Date(Date.now() - (t - index * 1.6) * 1000)
+    const ly = 650 + k * 18 + slide * 18
+    text(ctx, [stamp.getHours(), stamp.getMinutes(), stamp.getSeconds()].map(n => String(n).padStart(2, '0')).join(':'), 760, ly, 13, '#4d6a68')
+    text(ctx, message, 824, ly, 13, color)
+  }
+  ctx.restore()
+
+  text(ctx, 'HOST NEW YORK CITY   /   STATUS MAKING THINGS   /   TRUST YOUR CURIOSITY', 64, 774, 15, MUTED)
+  text(ctx, '[ YOU BELONG HERE. ]', 1376, 770, 22, PINK, 'right')
 }
 
 // An abridged passage from the novel; the ellipsis marks the cut. Blank entries are paragraph breaks.
@@ -1056,255 +1327,220 @@ function spectrum(ctx, t) {
   text(ctx, '[ THE AIR IS FULL OF SIGNALS. ]', panel + 20, 740, 16, PINK)
 }
 
-// An ASCII pin tumbler lock, picked in binding order, in neon colour with glitches on every set pin.
-// Static parts sit on an 8x16 character grid; pins, springs and tools move freely between rows.
-const SHEAR = 560
-const KEY_TIP = 655
-const CHAMBER_TOP = 352
-const PINS = [
-  { x: 296, depth: 30, driver: 62 },
-  { x: 416, depth: 16, driver: 70 },
-  { x: 536, depth: 40, driver: 58 },
-  { x: 656, depth: 22, driver: 66 },
-  { x: 776, depth: 34, driver: 60 },
-]
-const BINDING = [2, 0, 3, 1, 4]
-const PICK_START = 2
-const PICK_STEP = 3.2
-const PICK_DONE = PICK_START + BINDING.length * PICK_STEP
-const TURN_START = PICK_DONE + 1.4
-const OPEN_TIME = TURN_START + 2.4
-const SHRAPNEL = '*+x#@%&$!?'
-const setTime = pin => PICK_START + BINDING.indexOf(pin) * PICK_STEP + 2.2
-
-function pickState(t) {
-  if (t < PICK_START) return { x: -60 + 170 * ease((t - 0.3) / 1.5), lift: -10, active: -1 }
-  if (t >= PICK_DONE) return { x: PINS[BINDING.at(-1)].x - 1000 * ease((t - PICK_DONE) / 1.6), lift: -10, active: -1 }
-  const step = Math.floor((t - PICK_START) / PICK_STEP)
-  const local = t - PICK_START - step * PICK_STEP
-  const pin = PINS[BINDING[step]]
-  const from = step ? PINS[BINDING[step - 1]].x : 110
-  // Drop below the key pin tips while travelling, then lift until the driver sets.
-  const lift = local < 0.8 ? -10
-    : local < 2.2 ? -10 + (pin.depth + 10) * ease((local - 0.8) / 1.4)
-      : local < 2.4 ? pin.depth
-        : pin.depth - (pin.depth + 10) * ease((local - 2.4) / 0.8)
-  return { x: from + (pin.x - from) * ease(local / 0.8), lift, active: BINDING[step] }
+// A btop-style system monitor on the 8x16 character grid, in the show's neon palette.
+const monX = col => col * 8
+const monY = row => 80 + row * 16
+const HEAT = ['#6fe7e7', '#7ff0c0', '#ccff8b', '#ffc145', '#ff8a5c', '#ff4fd8']
+const heat = f => HEAT[Math.min(HEAT.length - 1, Math.max(0, Math.floor(f * HEAT.length)))]
+const MON_RATE = 6
+const MON_DIM = '#1d2a30'
+const smoothNoise = x => {
+  const i = Math.floor(x)
+  return noise(i) + (noise(i + 1) - noise(i)) * ease(x - i)
 }
+const clamp01 = v => Math.min(0.99, Math.max(0.01, v))
+// Braille dots filled from the bottom (up) or the top (down), for the left and right dot columns.
+const BRAILLE = {
+  up: [[0, 0x40, 0x44, 0x46, 0x47], [0, 0x80, 0xa0, 0xb0, 0xb8]],
+  down: [[0, 0x01, 0x03, 0x07, 0x47], [0, 0x08, 0x18, 0x38, 0xb8]],
+}
+const cpuLoad = s => clamp01(0.36 + 0.22 * Math.sin(s * 0.045) + 0.14 * Math.sin(s * 0.21 + 1) + 0.18 * (smoothNoise(s * 0.4) - 0.5)
+  + (noise(Math.floor(s / 40) + 9) > 0.62 ? 0.3 * Math.sin((s % 40) / 40 * Math.PI) : 0))
+const PROCESSES = [
+  ['wintermute', '/opt/tessier/wintermute --merge', 'root', 1.9, 64, 2048],
+  ['neuromancer', '/opt/tessier/neuromancer --dream', 'root', 1.6, 48, 1730],
+  ['sdr-waterfall', 'rtl_sdr -f 433.92M -s 2.4M -', 'guest', 1.4, 6, 212],
+  ['glider-gun', 'life --rule B3/S23 --gosper', 'guest', 1.1, 4, 96],
+  ['packet-sniffer', 'tcpdump -i mesh0 -w talks.pcap', 'root', 0.9, 2, 64],
+  ['pizza-queue', 'pizzad --boroughs=5 --extra-cheese', 'sprawl', 0.8, 12, 420],
+  ['lightning-talk', 'talkd --slot=20min --questions', 'speaker', 1.2, 8, 310],
+  ['hallway-track', 'hallwayd --meet-strangers', 'guest', 0.7, 16, 128],
+  ['ice-breaker', 'ice-breaker --target=sense-net', 'case', 1.0, 3, 77],
+  ['badge-reader', 'badged --nfc /dev/ttyUSB0', 'root', 0.4, 2, 18],
+  ['subway-signals', 'signald --lines=A,L,1,7,S', 'mta', 0.5, 5, 54],
+  ['bodega-cat', 'catd --nap --guard-chips', 'bodega', 0.2, 1, 9],
+  ['cold-brew', 'brewd --strength=max', 'sprawl', 0.3, 2, 33],
+  ['nmap', 'nmap -sV 10.0.0.0/24', 'guest', 0.9, 4, 41],
+  ['ghidra', 'ghidraRun firmware.bin', 'guest', 0.8, 38, 1288],
+  ['wireshark', 'wireshark -k -i mesh0', 'guest', 0.6, 9, 389],
+  ['tor', 'tor -f /etc/tor/torrc', 'tor', 0.3, 3, 61],
+  ['meshd', 'meshd --peers=all --open', 'root', 0.4, 6, 27],
+  ['sticker-swap', 'stickerd --trade --laptop-lid', 'guest', 0.2, 1, 12],
+  ['coffee-mutex', 'mutexd --one-cup-at-a-time', 'sprawl', 0.3, 1, 8],
+  ['cyberdeck', 'ono-sendai --jack-in', 'case', 1.3, 24, 960],
+  ['uart-console', 'screen /dev/ttyUSB0 115200', 'guest', 0.2, 1, 6],
+  ['qr-scanner', 'qrd --rsvp sprawl.nyc', 'sprawl', 0.3, 2, 22],
+  ['mitmproxy', 'mitmproxy --mode transparent', 'guest', 0.7, 7, 174],
+]
+const processCpu = (i, time) => Math.min(99.9, PROCESSES[i][3] * 9 * (0.35 + 1.3 * smoothNoise(time * 0.55 + i * 13.1)))
 
-// Housing and plug as ASCII hatching in opposite directions; the open variant tints the plug green.
-function paintLockBody(ctx, open) {
-  ctx.font = `16px ${FONT}`
-  ctx.textAlign = 'left'
-  ctx.textBaseline = 'top'
-  const inChamber = (col, row) => row >= 17 && row <= 34 && PINS.some(({ x }) => col >= x / 8 - 2 && col <= x / 8 + 1)
-  const chamberWall = col => PINS.some(({ x }) => col === x / 8 - 3 || col === x / 8 + 2)
-  for (let row = 16; row <= 40; row++) {
-    for (let col = 20; col <= 112; col++) {
-      const plug = row >= 30 && row <= 38 && col >= 22
-      if (inChamber(col, row) || (row >= 35 && row <= 37 && col >= 22 && col <= 109)) continue
-      let ch = null
-      let color = plug ? (open ? '#2e6b45' : '#1f4f55') : '#22404a'
-      if (row === 16 || row === 40) { ch = '='; color = '#7fb0b8' }
-      else if (col === 20 || col === 112) { ch = '|'; color = '#7fb0b8' }
-      else if (chamberWall(col) && row >= 17 && row <= 34) { ch = '|'; color = '#4f7f88' }
-      else if ((row === 34 || row === 38) && col <= 109) { ch = '='; color = plug && open ? '#5fae7a' : '#4f7f88' }
-      else if (plug && col === 22) { ch = '|'; color = open ? GREEN : '#7fb0b8' }
-      else if (plug ? (col - row + 400) % 4 === 0 : (col + row) % 4 === 0) ch = plug ? '\\' : '/'
-      if (!ch) continue
-      ctx.fillStyle = color
-      ctx.fillText(ch, col * 8, CITY_Y + row * 16)
+function brailleGraph(ctx, col, row, width, height, values, colorAt, down = false) {
+  const dots = height * 4
+  for (let r = 0; r < height; r++) {
+    const fromEdge = down ? r : height - 1 - r
+    let line = ''
+    for (let c = 0; c < width; c++) {
+      let code = 0x2800
+      for (let side = 0; side < 2; side++) {
+        const value = values[c * 2 + side] ?? 0
+        const filled = value > 0.01 ? Math.max(1, Math.round(value * dots)) : 0
+        code |= BRAILLE[down ? 'down' : 'up'][side][Math.max(0, Math.min(4, filled - fromEdge * 4))]
+      }
+      // Unifont draws empty braille dots faintly, so fully empty cells become plain spaces.
+      line += code === 0x2800 ? ' ' : String.fromCharCode(code)
     }
+    text(ctx, line, monX(col), monY(row + r), 16, colorAt(height > 1 ? fromEdge / (height - 1) : 1))
   }
 }
 
-// Copies a horizontal band of what is already on screen sideways, in device pixels.
-function tearBand(ctx, y, height, shift) {
-  const m = ctx.getTransform()
-  const sx = m.e
-  const sy = m.f + y * m.d
-  ctx.save()
-  ctx.setTransform(1, 0, 0, 1, 0, 0)
-  ctx.drawImage(ctx.canvas, sx, sy, W * m.a, height * m.d, sx + shift * m.a, sy, W * m.a, height * m.d)
-  ctx.restore()
+// Bars from the lower-eighth block elements; crisper than braille for small, mid-height graphs.
+const BAR_GLYPHS = ' ▁▂▃▄▅▆▇█'
+function blockGraph(ctx, col, row, width, height, values, colorAt) {
+  for (let r = 0; r < height; r++) {
+    const fromEdge = height - 1 - r
+    const line = values.slice(-width).map(value => BAR_GLYPHS[Math.max(0, Math.min(8, Math.round(value * height * 8) - fromEdge * 8))]).join('')
+    text(ctx, line, monX(col), monY(row + r), 16, colorAt(height > 1 ? fromEdge / (height - 1) : 1))
+  }
 }
 
-// A stack of glyph rows spread evenly between top and bottom, so pins move smoothly between grid rows.
-function glyphColumn(ctx, x, top, bottom, rows, color) {
+function meter(ctx, col, row, width, value) {
+  for (let i = 0; i < width; i++) text(ctx, '■', monX(col + i), monY(row), 16, i / width < value ? heat(i / width) : MON_DIM)
+}
+
+function monBox(ctx, c0, r0, c1, r1, color, labels) {
   ctx.save()
   ctx.shadowColor = color
-  ctx.shadowBlur = 8
-  rows.forEach((row, i) => text(ctx, row, x, top + (bottom - top - 16) * (rows.length > 1 ? i / (rows.length - 1) : 0), 16, color, 'center'))
+  ctx.shadowBlur = 6
+  text(ctx, `╭${'─'.repeat(c1 - c0 - 1)}╮`, monX(c0), monY(r0), 16, color)
+  text(ctx, `╰${'─'.repeat(c1 - c0 - 1)}╯`, monX(c0), monY(r1), 16, color)
+  for (let r = r0 + 1; r < r1; r++) {
+    text(ctx, '│', monX(c0), monY(r), 16, color)
+    text(ctx, '│', monX(c1), monY(r), 16, color)
+  }
   ctx.restore()
+  // Labels sit in the top border between ┐ and ┌, as btop draws them.
+  for (const [col, label, labelColor, row = r0] of labels) {
+    box(ctx, monX(col), monY(row), (label.length + 2) * 8, 16, INK)
+    text(ctx, '┐', monX(col), monY(row), 16, color)
+    text(ctx, label, monX(col + 1), monY(row), 16, labelColor)
+    text(ctx, '┌', monX(col + 1 + label.length), monY(row), 16, color)
+  }
 }
 
-function lockpick(ctx, t) {
-  const pick = pickState(t)
-  const rotation = ease((t - TURN_START) / 2.4)
-  const open = rotation > 0
-  const sinceOpen = t - OPEN_TIME
-  const glow = ctx.createRadialGradient(540, 540, 20, 540, 540, 620)
-  glow.addColorStop(0, '#140b24')
-  glow.addColorStop(1, INK)
-  box(ctx, 0, 78, W, 736, glow)
-  caption(ctx, `${sceneNumber(lockpick)}   /   PHYSICAL LAYER`, 'EVERY LOCK IS A PUZZLE.', 'PIN TUMBLER  /  CROSS-SECTION  /  TENSION, FEEDBACK, PATIENCE')
+function monitor(ctx, t) {
+  const sample = t * MON_RATE
+  const now = Math.floor(sample)
+  const history = (fn, count) => Array.from({ length: count }, (_, i) => fn(now - count + 1 + i))
+  const clock = new Date()
+  const pad = n => String(n).padStart(2, '0')
 
-  cachedLayer(ctx, 'lock-body', 160, 336, 752, 416, context => paintLockBody(context, false))
-  if (open) {
-    ctx.save()
-    ctx.globalAlpha *= rotation
-    cachedLayer(ctx, 'lock-body-open', 160, 336, 752, 416, context => paintLockBody(context, true))
-    ctx.restore()
+  // cpu: total history on the left, per-core meters in an inner box on the right.
+  monBox(ctx, 5, 1, 174, 16, CYAN, [
+    [7, '¹cpu', '#e0efec'],
+    [83, `${pad(clock.getHours())}:${pad(clock.getMinutes())}:${pad(clock.getSeconds())}`, '#ffffff'],
+    [152, '- 166ms +', MUTED],
+  ])
+  const total = cpuLoad(sample)
+  brailleGraph(ctx, 7, 2, 112, 14, history(cpuLoad, 224), heat)
+  monBox(ctx, 122, 2, 172, 15, '#3f6c72', [[124, 'SPRAWL-0x9 @ 4.20 GHz', CYAN]])
+  text(ctx, 'CPU', monX(124), monY(3), 16, '#e0efec')
+  meter(ctx, 128, 3, 24, total)
+  text(ctx, `${String(Math.round(total * 100)).padStart(3)}%`, monX(157), monY(3), 16, heat(total), 'right')
+  text(ctx, `${Math.round(48 + total * 30)}°C`, monX(163), monY(3), 16, MUTED)
+  for (let core = 0; core < 16; core++) {
+    const load = clamp01(total * 0.7 + 0.45 * (smoothNoise(sample * 0.35 + core * 17.3) - 0.4))
+    const col = core < 8 ? 124 : 148
+    const row = 5 + core % 8
+    text(ctx, `C${String(core).padStart(2, '0')}`, monX(col), monY(row), 16, MUTED)
+    meter(ctx, col + 4, row, 12, load)
+    text(ctx, `${String(Math.round(load * 100)).padStart(3)}%`, monX(col + 21), monY(row), 16, heat(load), 'right')
   }
-  // A few hatch cells are always mid-corruption.
-  for (let i = 0; i < 4; i++) {
-    const seed = i * 13.7 + Math.floor(t * 5) * 3.3
-    const col = 21 + Math.floor(noise(seed) * 91)
-    const row = 17 + Math.floor(noise(seed + 1) * 22)
-    text(ctx, SHRAPNEL[Math.floor(noise(seed + 2) * SHRAPNEL.length)], col * 8, CITY_Y + row * 16, 16, i % 2 ? FUCHSIA : CYAN)
+  const loads = [1.24, 0.98, 0.77].map((base, i) => (base + total * (1.2 - i * 0.3)).toFixed(2))
+  text(ctx, 'Load AVG:', monX(124), monY(13), 16, MUTED)
+  text(ctx, loads.join('  '), monX(135), monY(13), 16, '#e0efec')
+  const up = 13 * 3600 + 37 * 60 + Math.floor(t)
+  text(ctx, `up ${pad(Math.floor(up / 3600))}:${pad(Math.floor(up / 60) % 60)}:${pad(up % 60)}`, monX(124), monY(14), 16, MUTED)
+  text(ctx, `tasks ${1337 + Math.round(total * 40)}`, monX(171), monY(14), 16, MUTED, 'right')
+
+  // mem: four metrics, each a figure and a short history graph.
+  monBox(ctx, 5, 17, 64, 30, AMBER, [[7, '²mem', '#e0efec'], [46, 'Total 64.0 GiB', MUTED]])
+  const used = s => clamp01(0.5 + 0.12 * Math.sin(s * 0.035) + 0.14 * (smoothNoise(s * 0.12) - 0.5))
+  ;[
+    ['Used', FUCHSIA, used],
+    ['Available', '#ccff8b', s => 1 - used(s)],
+    ['Cached', CYAN, s => clamp01(0.22 + 0.16 * smoothNoise(s * 0.09 + 5))],
+    ['Free', AMBER, s => clamp01(0.2 - 0.1 * Math.sin(s * 0.035) + 0.12 * (smoothNoise(s * 0.15 + 9) - 0.5))],
+  ].forEach(([label, color, fn], i) => {
+    const row = 18 + i * 3
+    const value = fn(sample)
+    text(ctx, `${label}:`, monX(7), monY(row), 16, '#e0efec')
+    text(ctx, `${(value * 64).toFixed(1)} GiB`, monX(54), monY(row), 16, color, 'right')
+    text(ctx, `${String(Math.round(value * 100)).padStart(3)}%`, monX(62), monY(row), 16, MUTED, 'right')
+    blockGraph(ctx, 7, row + 1, 55, 2, history(fn, 55), () => color)
+  })
+
+  // net: download graphed upward, upload graphed downward, like btop.
+  monBox(ctx, 5, 31, 64, 44, '#ccff8b', [[7, '³net', '#e0efec'], [53, 'mesh0', CYAN]])
+  const down = s => clamp01(0.3 + 0.25 * Math.sin(s * 0.07) + 0.3 * smoothNoise(s * 0.5 + 3) * (noise(Math.floor(s / 25)) > 0.4 ? 1 : 0.3))
+  const upload = s => clamp01(0.12 + 0.1 * smoothNoise(s * 0.6 + 21) + (noise(Math.floor(s / 18) + 4) > 0.75 ? 0.35 : 0))
+  brailleGraph(ctx, 7, 32, 56, 6, history(down, 112), heat)
+  brailleGraph(ctx, 7, 38, 56, 6, history(upload, 112), f => ['#9d6bff', '#c45cff', FUCHSIA][Math.min(2, Math.floor(f * 3))], true)
+  for (const [row, label, color] of [[32, `▼ Download ${(down(sample) * 120).toFixed(1)} MiB/s`, CYAN], [43, `▲ Upload ${(upload(sample) * 40).toFixed(1)} MiB/s`, FUCHSIA]]) {
+    box(ctx, monX(8), monY(row), (label.length + 2) * 8, 16, INK)
+    text(ctx, label, monX(9), monY(row), 16, color)
   }
 
-  PINS.forEach((pin, i) => {
-    const active = pick.active === i
-    const set = t >= setTime(i)
-    const keyBottom = KEY_TIP - (active ? Math.max(0, pick.lift) : 0)
-    const keyTop = keyBottom - (KEY_TIP - SHEAR - pin.depth)
-    const driverBottom = set ? SHEAR - 3 : keyTop
-    const driverTop = driverBottom - pin.driver
-    for (let n = 0; n < 9; n++) {
-      text(ctx, n % 2 ? '/\\/' : '\\/\\', pin.x, CHAMBER_TOP + (driverTop - CHAMBER_TOP - 14) * n / 8, 14, '#9a7fb0', 'center')
-    }
-    glyphColumn(ctx, pin.x, driverTop, driverBottom, Array(Math.ceil(pin.driver / 16)).fill('███'), active && !set ? FUCHSIA : CYAN)
-    const keyRows = Math.ceil((keyBottom - keyTop) / 16)
-    glyphColumn(ctx, pin.x, keyTop, keyBottom, [...Array(keyRows - 1).fill('███'), '\\█/'], AMBER)
-    // Feedback when a pin sets: a click and a small burst of sparks off the shear line.
-    const since = t - setTime(i)
-    if (since > 0 && since < 1) {
+  // proc: re-sorted by cpu every 1.5 seconds, with a selection stepping down the list.
+  monBox(ctx, 66, 17, 174, 44, FUCHSIA, [[68, '⁴proc', '#e0efec'], [80, 'filter: sprawl', MUTED], [150, '< cpu lazy >', CYAN]])
+  const sortTime = Math.floor(t / 1.5) * 1.5
+  const order = PROCESSES.map((_, i) => i).sort((a, b) => processCpu(b, sortTime) - processCpu(a, sortTime))
+  const selected = Math.floor(t / 2) % 12
+  // Every 1.2 seconds a couple of processes briefly take the name sprawl.nyc, flashing fuchsia as they do.
+  const renameSlot = Math.floor(t / 1.2)
+  const renameFlash = 1 - (t / 1.2 - renameSlot) * 0.75
+  const columns = [[74, 'Pid:', 'right'], [76, 'Program:'], [93, 'Command:'], [135, 'Thr:', 'right'], [137, 'User:'], [152, 'MemB', 'right'], [159, 'Cpu%', 'right']]
+  columns.forEach(([col, label, align]) => text(ctx, label, monX(col), monY(18), 16, '#e0efec', align))
+  order.forEach((index, rank) => {
+    const [name, command, user, , threads, memory] = PROCESSES[index]
+    const row = 19 + rank
+    const cpu = processCpu(index, t)
+    const active = rank === selected
+    const renamed = noise(index * 7.3 + renameSlot * 3.1) > 0.92
+    if (active) box(ctx, monX(67), monY(row), monX(107), 16, '#3a1240')
+    if (renamed) {
       ctx.save()
-      ctx.globalAlpha *= 1 - since
-      text(ctx, '* CLICK *', pin.x, SHEAR - 150 - since * 24, 16, GREEN, 'center')
-      for (let k = 0; k < 18; k++) {
-        const angle = noise(i * 100 + k) * Math.PI * 2
-        const speed = 60 + noise(i * 100 + k + 50) * 160
-        text(ctx, SHRAPNEL[k % SHRAPNEL.length], pin.x + Math.cos(angle) * speed * since, SHEAR + Math.sin(angle) * speed * since, 14, [CYAN, FUCHSIA, AMBER, '#ffffff'][k % 4], 'center')
-      }
+      ctx.globalAlpha *= 0.4 * renameFlash
+      box(ctx, monX(67), monY(row), monX(107), 16, FUCHSIA)
       ctx.restore()
     }
-  })
-
-  ctx.save()
-  ctx.shadowColor = open ? GREEN : PINK
-  ctx.shadowBlur = 10
-  text(ctx, '- '.repeat(48), 144, SHEAR - 8, 16, open ? GREEN : PINK)
-  ctx.restore()
-  ;[['SPRINGS', 410], ['DRIVER PINS', 500], ['SHEAR LINE', SHEAR], ['KEY PINS', 610], ['KEYWAY', 664]].forEach(([label, y]) => {
-    if (label !== 'SHEAR LINE') line(ctx, 912, y, 926, y, '#2c5156')
-    text(ctx, label, 932, y - 8, 14, label === 'SHEAR LINE' ? (open ? GREEN : PINK) : MUTED)
-  })
-
-  // Tension wrench in the bottom of the keyway; hook pick riding along beneath the pins.
-  ctx.save()
-  ctx.shadowColor = '#b89bff'
-  ctx.shadowBlur = 6
-  text(ctx, `┏${'━'.repeat(9)}`, 128, 680, 16, '#b89bff')
-  for (let y = 694; y < 776; y += 14) text(ctx, '┃', 128, y, 16, '#b89bff')
-  ctx.restore()
-  text(ctx, 'TENSION', 146, 760, 14, MUTED)
-  ctx.save()
-  ctx.beginPath()
-  ctx.rect(48, 290, 860, 500)
-  ctx.clip()
-  ctx.shadowColor = '#ffffff'
-  ctx.shadowBlur = 8
-  const hookX = pick.x - 4
-  const hookTop = KEY_TIP - pick.lift
-  text(ctx, '━'.repeat(76), hookX - 8 - 76 * 8, 662, 16, '#f2f6f5')
-  text(ctx, '┛', hookX - 4, 662, 16, '#f2f6f5')
-  for (let y = 650; y > hookTop - 2; y -= 12) text(ctx, '┃', hookX - 4, y, 16, '#f2f6f5')
-  text(ctx, '▐▓▓▓▓▓▓▓▌', hookX - 8 - 76 * 8 - 72, 662, 16, FUCHSIA)
-  ctx.restore()
-
-  // Front view: rings of glyphs; the plug, keyway and wrench turn together.
-  const cx = 1210
-  const cy = 446
-  const cam = rotation * Math.PI / 2
-  text(ctx, 'FRONT VIEW', cx, 314, 16, GREEN, 'center')
-  ctx.font = `14px ${FONT}`
-  ctx.textAlign = 'center'
-  ctx.textBaseline = 'middle'
-  ctx.fillStyle = '#4f7f88'
-  for (let k = 0; k < 64; k++) ctx.fillText('#', cx + Math.cos(k / 64 * Math.PI * 2) * 104, cy + Math.sin(k / 64 * Math.PI * 2) * 104)
-  ctx.save()
-  ctx.translate(cx, cy)
-  ctx.rotate(cam)
-  ctx.fillStyle = open ? GREEN : CYAN
-  for (let k = 0; k < 40; k++) ctx.fillText('o', Math.cos(k / 40 * Math.PI * 2) * 68, Math.sin(k / 40 * Math.PI * 2) * 68)
-  ctx.fillStyle = '#ffffff'
-  ;['[', '|', '<', '|', '>', '|', ']'].forEach((ch, k) => ctx.fillText(ch, 0, -42 + k * 14))
-  ctx.fillStyle = AMBER
-  ctx.fillText('@', 0, -56)
-  ctx.fillStyle = '#b89bff'
-  for (let y = 54; y < 100; y += 12) ctx.fillText('┃', 0, y)
-  ctx.restore()
-  ctx.fillStyle = CYAN
-  ctx.fillText('@', cx, cy - 86)
-  text(ctx, `PLUG ROT  ${String(Math.round(rotation * 90)).padStart(2, '0')}°`, cx, 566, 16, open ? GREEN : MUTED, 'center')
-
-  const setCount = PINS.filter((_, i) => t >= setTime(i)).length
-  text(ctx, open ? 'STATUS: OPEN' : `PINS SET: ${setCount} / ${PINS.length}`, 1060, 610, 18, open ? GREEN : '#c3d9d5')
-  PINS.forEach((_, i) => {
-    const set = t >= setTime(i)
-    const binding = pick.active === i && !set
-    const y = 642 + i * 22
-    text(ctx, `PIN ${i + 1}`, 1060, y, 16, MUTED)
-    text(ctx, `#${BINDING.indexOf(i) + 1}`, 1140, y, 16, '#3f6c72')
-    text(ctx, set ? 'SET' : binding ? 'BINDING' : '---', 1376, y, 16, set ? GREEN : binding ? PINK : '#3f6c72', 'right')
-  })
-  text(ctx, '[ PICK ONLY WHAT YOU OWN. ]', 1060, 766, 16, PINK)
-
-  // The lock opening: ASCII shrapnel off the plug and a shockwave ring.
-  if (sinceOpen > 0 && sinceOpen < 2.6) {
-    ctx.save()
-    ctx.globalAlpha *= Math.min(1, (2.6 - sinceOpen) / 1.3)
-    ctx.textAlign = 'center'
-    ctx.textBaseline = 'middle'
-    for (let k = 0; k < 160; k++) {
-      const angle = noise(k * 3.1) * Math.PI * 2
-      const travel = (100 + noise(k * 5.7) * 560) * (1 - Math.exp(-sinceOpen * 1.8)) / 1.8
-      ctx.font = `${12 + Math.floor(noise(k * 1.9) * 12)}px ${FONT}`
-      ctx.fillStyle = [CYAN, FUCHSIA, GREEN, AMBER][k % 4]
-      ctx.fillText(SHRAPNEL[k % SHRAPNEL.length], 180 + noise(k * 7.3) * 720 + Math.cos(angle) * travel, SHEAR + Math.sin(angle) * travel * 0.7)
-    }
-    ctx.font = `20px ${FONT}`
-    for (let k = 0; k < 72; k++) {
-      const angle = k / 72 * Math.PI * 2
-      ctx.fillStyle = k % 2 ? GREEN : CYAN
-      ctx.fillText('*', 540 + Math.cos(angle) * sinceOpen * 460, SHEAR + Math.sin(angle) * sinceOpen * 280)
-    }
-    ctx.restore()
-  }
-
-  // Glitch: strongest as the lock opens, a short tear on each set pin, a light flicker now and then.
-  const pinGlitch = PINS.some((_, i) => t - setTime(i) >= 0 && t - setTime(i) < 0.2)
-  const intensity = sinceOpen >= 0 && sinceOpen < 0.7 ? 0.8 : pinGlitch ? 0.45 : t % 4.3 < 0.15 ? 0.25 : 0
-  if (intensity > 0) {
-    const seed = Math.floor(t * 12)
-    ctx.save()
-    ctx.globalCompositeOperation = 'lighter'
-    ctx.globalAlpha *= 0.15 * intensity
-    tearBand(ctx, 290, 500, -4 - intensity * 6)
-    tearBand(ctx, 290, 500, 4 + intensity * 6)
-    ctx.restore()
-    for (let b = 0; b < 1 + Math.floor(intensity * 5); b++) {
-      tearBand(ctx, 290 + noise(seed * 7 + b) * 470, 8 + noise(seed * 11 + b) * 28, (noise(seed * 13 + b) - 0.5) * 90 * intensity)
-    }
-    if (intensity >= 0.8) {
+    text(ctx, String(1337 + index * 97), monX(74), monY(row), 16, active ? '#ffffff' : MUTED, 'right')
+    if (renamed) {
       ctx.save()
-      ctx.globalCompositeOperation = 'difference'
-      for (let b = 0; b < 2; b++) box(ctx, 48, 300 + noise(seed * 17 + b) * 470, W - 96, 4 + noise(seed * 19 + b) * 14, b ? CYAN : FUCHSIA)
+      ctx.shadowColor = FUCHSIA
+      ctx.shadowBlur = 10
+      text(ctx, 'sprawl.nyc', monX(76), monY(row), 16, '#ff9ae8')
       ctx.restore()
+    } else {
+      text(ctx, name, monX(76), monY(row), 16, active ? '#ffffff' : '#e0efec')
     }
+    text(ctx, command.slice(0, 40), monX(93), monY(row), 16, active ? '#f2c6ea' : '#5d7a80')
+    text(ctx, String(threads), monX(135), monY(row), 16, active ? '#ffffff' : MUTED, 'right')
+    text(ctx, user, monX(137), monY(row), 16, active ? '#ffffff' : '#4fb8c0')
+    text(ctx, `${Math.round(memory * (1 + 0.04 * smoothNoise(t + index)))}M`, monX(152), monY(row), 16, active ? '#ffffff' : AMBER, 'right')
+    text(ctx, cpu.toFixed(1), monX(159), monY(row), 16, heat(cpu / 30), 'right')
+    blockGraph(ctx, 161, row, 12, 1, Array.from({ length: 12 }, (_, k) => processCpu(index, t - (11 - k) * 0.5) / 30), () => heat(cpu / 30))
+  })
+  // Key hints with the hotkey highlighted in place, as btop shows them.
+  const hints = ['[↑] select [↓]', 'info [↵]', '[t]erminate', '[k]ill', '[s]ignals', '[n]ice']
+  let col = 68
+  for (const hint of hints) {
+    for (const [i, part] of hint.split(/\[|\]/).entries()) {
+      text(ctx, part, monX(col), monY(43), 16, i % 2 ? FUCHSIA : MUTED)
+      col += part.length
+    }
+    col += 3
   }
+  text(ctx, `${order.length}/${PROCESSES.length}`, monX(172), monY(43), 16, MUTED, 'right')
 }
 
 // A fictional board boots over its UART header while a logic analyzer decodes each frame.
@@ -1392,7 +1628,7 @@ function uartTrace(ctx, t, channel, top, color) {
 }
 
 function hardware(ctx, t) {
-  caption(ctx, `${sceneNumber(hardware)}   /   HARDWARE HACKING`, 'FIND THE DEBUG PORT.', 'UART  /  TX  RX  GND  VCC  /  READ THE BOOT LOG')
+  caption(ctx, `${sceneNumber(hardware)}   /   HARDWARE HACKING`, 'YOU ARE IN THE DEBUG PORT.', 'UART IS REAL ART  /  TX  RX  GND  VCC  /  READ THE BOOT LOG')
   const gold = '#b6a66b'
   const silk = '#9fbdb8'
 
@@ -1571,8 +1807,8 @@ function life(ctx, t) {
   const cell = 12
   const visible = ([x, y]) => x >= 0 && x < LIFE_COLS && y >= 0 && y < LIFE_ROWS
   const grid = new Path2D()
-  for (let x = 0; x <= LIFE_COLS; x++) for (let y = 0; y <= LIFE_ROWS; y++) grid.rect(left + x * cell, top + y * cell, 1, 1)
-  ctx.fillStyle = '#1e2529'
+  for (let x = 0; x <= LIFE_COLS; x++) for (let y = 0; y <= LIFE_ROWS; y++) grid.rect(left + x * cell - 1, top + y * cell - 1, 2, 2)
+  ctx.fillStyle = '#3b4b53'
   ctx.fill(grid)
 
   ctx.setLineDash([4, 5])
@@ -1581,6 +1817,7 @@ function life(ctx, t) {
     const width = Math.max(...cells.map(pattern => pattern.length))
     const x = left + (col - 1 - pad) * cell
     box(ctx, x, top + (row - 1 - pad) * cell, (width + 2 + pad * 2) * cell, (cells.length + 2 + pad * 2) * cell, null, '#6e2a62')
+    box(ctx, x - 2, top + (row + cells.length + 1 + pad) * cell + 4, label.length * 6.5 + 4, 17, INK)
     text(ctx, label, x, top + (row + cells.length + 1 + pad) * cell + 6, 13, MUTED)
   }
   ctx.setLineDash([])
@@ -1642,13 +1879,13 @@ function life(ctx, t) {
     dot(ctx, ex + x * 52 + 26, ey + y * 52 + 26, 17, CYAN)
   }
   text(ctx, 'THE GLIDER', panel + 158, 566, 26, '#e0efec', 'center')
-  text(ctx, 'FIVE CELLS. ALWAYS MOVING.', panel + 158, 602, 16, MUTED, 'center')
+  text(ctx, 'FIVE CELLS ALWAYS MOVING', panel + 158, 602, 16, MUTED, 'center')
   line(ctx, panel + 20, 634, panel + 296, 634, '#1f3d42')
   ;[['GENERATION', String(generation).padStart(4, '0')], ['POPULATION', String(current.length).padStart(4, '0')], ['RULE', 'B3/S23']].forEach(([key, value], i) => {
     text(ctx, key, panel + 20, 650 + i * 28, 16, MUTED)
     text(ctx, value, panel + 296, 650 + i * 28, 16, '#c3d9d5', 'right')
   })
-  text(ctx, '[ START SMALL. KEEP GOING. ]', panel + 20, 746, 16, FUCHSIA)
+  text(ctx, '[ NEIGHBORS IN PERPETUAL MOTION ]', panel + 20, 746, 16, FUCHSIA)
 }
 
 // The SPRAWL challenge coin's circuit-traced Liberty, rebuilt from ASCII with brief, local glitches.
@@ -1698,10 +1935,7 @@ const SPRAWL_BANNER = [
 ]
 const mix = (from, to, f) => `#${[1, 3, 5].map(i => Math.round(parseInt(from.slice(i, i + 2), 16) * (1 - f) + parseInt(to.slice(i, i + 2), 16) * f).toString(16).padStart(2, '0')).join('')}`
 
-function paintSprawlBanner(ctx) {
-  const size = 20
-  const left = 64 + (540 - SPRAWL_BANNER[0].length * size / 2) / 2
-  const top = 566 + (196 - SPRAWL_BANNER.length * size) / 2
+function paintSprawlBanner(ctx, left, top, size) {
   ctx.font = `${size}px ${FONT}`
   ctx.textAlign = 'left'
   ctx.textBaseline = 'top'
@@ -1716,6 +1950,69 @@ function paintSprawlBanner(ctx) {
       ctx.fillText(ch, left + c * size / 2, top + r * size)
     })
   })
+}
+
+// The auditorium filling up: 8 curved rows around the stage, split by a centre aisle.
+// Seats are taken slowly in a shuffled order with a slight pull toward the front, each one filling in.
+const SEAT_ROWS = 8
+const SEAT_COLS = 24
+const SEATS = []
+for (let row = 0; row < SEAT_ROWS; row++) {
+  for (let col = 0; col < SEAT_COLS; col++) {
+    const x = 142 + col * 15 + (col >= SEAT_COLS / 2 ? 24 : 0)
+    const offset = (x + 5 - 334) / 196
+    SEATS.push({ x, y: 624 + row * 15 - offset * offset * 12, order: noise(row * 31.7 + col * 7.3) * 0.75 + row / SEAT_ROWS * 0.25 })
+  }
+}
+const SEAT_FILL = 0.9
+const SEATS_AT_START = 6
+const SEAT_CUE = 0.9
+const SEAT_EMPTY = '#2c4048'
+const SEAT_ACTIVE = '#c8d2d5'
+SEATS.map((seat, i) => [seat.order, i]).sort((a, b) => a[0] - b[0]).forEach(([, i], rank) => {
+  SEATS[i].takenAt = rank < SEATS_AT_START ? -SEAT_FILL : 1.2 + (rank - SEATS_AT_START) * 0.32 + noise(i * 3.3) * 0.5
+})
+
+function drawAuditorium(ctx, t) {
+  box(ctx, 64, 566, 540, 196, '#070f12', '#1f3d42')
+  text(ctx, 'AUDITORIUM', 84, 580, 18, GREEN)
+  const taken = SEATS.filter(seat => t >= seat.takenAt + SEAT_FILL).length
+  text(ctx, `SEATS ${String(taken).padStart(3)} / ${SEATS.length}`, 584, 582, 16, taken ? FUCHSIA : '#c3d9d5', 'right')
+  box(ctx, 214, 606, 240, 3, '#3f5560')
+  text(ctx, 'STAGE', 334, 590, 12, MUTED, 'center')
+
+  const empty = new Path2D()
+  const filling = new Path2D()
+  const filled = new Path2D()
+  const cued = []
+  for (const seat of SEATS) {
+    const since = t - seat.takenAt
+    // Mid-fill seats get a light grey outline; just before, it fades up to that grey and holds.
+    if (since > 0 && since < SEAT_FILL) filling.rect(seat.x + 0.5, seat.y + 0.5, 9, 9)
+    else if (since > -SEAT_CUE && since <= 0) cued.push([seat, 1 + since / SEAT_CUE])
+    else empty.rect(seat.x + 0.5, seat.y + 0.5, 9, 9)
+    // A seat being taken fills from the bottom in five 2px steps.
+    if (since > 0) {
+      const height = since >= SEAT_FILL ? 10 : Math.ceil(since / SEAT_FILL * 5) * 2
+      filled.rect(seat.x, seat.y + 10 - height, 10, height)
+    }
+  }
+  ctx.strokeStyle = SEAT_EMPTY
+  ctx.lineWidth = 1
+  ctx.stroke(empty)
+  ctx.strokeStyle = SEAT_ACTIVE
+  ctx.stroke(filling)
+  // Fade the outline in over the first half of the cue, then hold briefly before the fill begins.
+  for (const [seat, cue] of cued) {
+    ctx.strokeStyle = mix(SEAT_EMPTY, SEAT_ACTIVE, ease(cue / 0.5))
+    ctx.strokeRect(seat.x + 0.5, seat.y + 0.5, 9, 9)
+  }
+  ctx.save()
+  ctx.shadowColor = FUCHSIA
+  ctx.shadowBlur = 6
+  ctx.fillStyle = FUCHSIA
+  ctx.fill(filled)
+  ctx.restore()
 }
 
 function arcText(ctx, value, radius, center, step, size, color, swap) {
@@ -1762,7 +2059,9 @@ export function drawCoinIntro(ctx, width, height, seconds) {
 
 function liberty(ctx, t) {
   for (let x = 48; x < W; x += 32) for (let y = 110; y < 810; y += 32) dot(ctx, x, y, 1, '#14262a')
-  caption(ctx, `${sceneNumber(liberty)}   /   SIGILLUM CIVITATIS NOVI EBORACI`, 'LIBERTY.EXE', 'SEAL OF THE CITY OF NEW YORK  /  SPRAWL CHALLENGE COIN')
+  caption(ctx, `${sceneNumber(liberty)}   /   SIGILLUM CIVITATIS NOVI EBORACI`, '', 'SEAL OF THE CITY OF NEW YORK  /  SPRAWL CHALLENGE COIN')
+  // The ANSI Shadow SPRAWL logo stands in for the caption title.
+  cachedLayer(ctx, 'sprawl-title', 60, 152, 380, 96, context => paintSprawlBanner(context, 64, 160, 14))
   const { glitching, jitter, revealed } = coinTiming(t)
 
   // Readout panel.
@@ -1773,7 +2072,7 @@ function liberty(ctx, t) {
   ;[
     ['OBJECT', 'CHALLENGE COIN'],
     ['ISSUER', 'SPRAWL.NYC'],
-    ['SUBJECT', 'LIBERTY ENLIGHTENING THE WORLD'],
+    ['SUBJECT', 'HACK THE PLANET'],
     ['INLAY', 'CYAN / MAGENTA'],
     ['RENDER', `ASCII  ${HEAD_COLS} x ${HEAD_ROWS}`],
     ['INTEGRITY', integrity],
@@ -1781,8 +2080,7 @@ function liberty(ctx, t) {
     text(ctx, key, 84, 360 + i * 28, 16, MUTED)
     text(ctx, value, 214, 360 + i * 28, 16, key === 'INTEGRITY' && glitching ? FUCHSIA : '#c3d9d5')
   })
-  box(ctx, 64, 566, 540, 196, '#070f12', '#1f3d42')
-  cachedLayer(ctx, 'sprawl-banner', 64, 566, 540, 196, paintSprawlBanner)
+  drawAuditorium(ctx, t)
   drawCoin(ctx, t)
 }
 
