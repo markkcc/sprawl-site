@@ -123,7 +123,12 @@ export default function SignalView({ currentEvent, pastEvents, expandedTalks, to
             <span>PID</span><span>TALK</span><span>SPEAKER</span><span>ABS</span>
           </div>
           <ul className="signal-table">
-            {currentEvent.talks.length === 0 && <li className="signal-row signal-empty">no talks scheduled yet. stay tuned.</li>}
+            {currentEvent.talks.length === 0 && (
+              <li className="signal-row signal-empty">
+                no talks scheduled yet. stay tuned.<br />
+                --&gt; Submit your own, email <a href="mailto:cfp@sprawl.nyc">cfp@sprawl.nyc</a>
+              </li>
+            )}
             {currentEvent.talks.map(talk => {
               const key = `${currentEvent.id}-${talk.id}`
               return (
