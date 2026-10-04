@@ -1,7 +1,5 @@
 // Every Sprawl event and its talks. All themes render from these.
 
-export const REGISTER_URL = 'https://luma.com/qanh0y8b'
-
 // A talk's description is "TBD" until we have an abstract; the site shows "-" instead.
 // A paragraph starting with __SLIDES__ becomes a link to the slides.
 export const hasAbstract = talk => Boolean(talk.description) && talk.description !== 'TBD'
@@ -10,10 +8,23 @@ export const abstractParagraphs = talk => talk.description.split('\n\n').map(par
 
 const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
 const ordinal = day => day + (day % 10 === 1 && day !== 11 ? 'st' : day % 10 === 2 && day !== 12 ? 'nd' : day % 10 === 3 && day !== 13 ? 'rd' : 'th')
-// "October 6th, 2026 @ Microsoft, co-sponsored by Crash Override"
+// A date or venue that isn't set yet is written as '??', e.g. '2026-12-??'.
+export const hasFullDate = event => /^\d{4}-\d{2}-\d{2}$/.test(event.date)
+// "October 6th, 2026 @ Microsoft, co-sponsored by Crash Override", or "December ??, 2026 @ ??"
 export function eventDetails({ date, venue }) {
-  const [year, month, day] = date.split('-').map(Number)
-  return `${MONTHS[month - 1]} ${ordinal(day)}, ${year} @ ${venue}`
+  const [year, month, day] = date.split('-')
+  const dayText = Number.isInteger(Number(day)) ? ordinal(Number(day)) : day
+  return `${MONTHS[month - 1]} ${dayText}, ${year} @ ${venue}`
+}
+
+// Registration stays locked behind a countdown until registerOpens, and until there is a registerUrl to open.
+export const isRegistrationOpen = (event, now) => Boolean(event.registerUrl) && now >= new Date(event.registerOpens)
+// "29d 4h 12m 9s" until registration opens, or null once the countdown has run out.
+export function registrationCountdown(event, now) {
+  const seconds = Math.floor((new Date(event.registerOpens) - now) / 1000)
+  if (seconds <= 0) return null
+  const parts = [[Math.floor(seconds / 86400), 'd'], [Math.floor(seconds / 3600) % 24, 'h'], [Math.floor(seconds / 60) % 60, 'm']]
+  return parts.filter(([value]) => value > 0).map(([value, unit]) => value + unit).concat(`${seconds % 60}s`).join(' ')
 }
 
 const talks0x7 = [
@@ -153,10 +164,21 @@ This talk will test the promise of privacy provided by these systems -- covering
 ]
 
 // The upcoming event; move it to the top of pastEvents once it has happened.
-export const currentEvent = { id: '0x7', name: 'Sprawl 0x7', date: '2026-10-06', venue: 'Microsoft, co-sponsored by Crash Override', talks: talks0x7 }
+// eta is shown in place of a day countdown while the date is still '??'.
+export const currentEvent = {
+  id: '0x8',
+  name: 'Sprawl 0x8',
+  date: '2026-12-??',
+  venue: '??',
+  eta: '2 months',
+  registerOpens: '2026-11-03T18:00:00-05:00',
+  registerUrl: null,
+  talks: []
+}
 
 // Newest first.
 export const pastEvents = [
+  { id: '0x7', name: 'Sprawl 0x7', date: '2026-10-06', venue: 'Microsoft, co-sponsored by Crash Override', talks: talks0x7 },
   { id: '0x6', name: 'Sprawl 0x6', date: '2026-08-18', venue: 'CLEAR', talks: talks0x6 },
   { id: '0x5', name: 'Sprawl 0x5', date: '2026-06-04', venue: 'Etsy', talks: talks0x5 },
   { id: '0x4', name: 'Sprawl 0x4', date: '2026-04-07', venue: 'Figma', talks: talks0x4 },

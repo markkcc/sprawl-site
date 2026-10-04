@@ -370,6 +370,11 @@
   background: rgba(0, 0, 0, 0.5);
 }
 
+.talk-empty {
+  padding: 1rem;
+  text-align: center;
+}
+
 .talk-box-with-stars,
 .talk-box-with-matrix {
   position: relative;
