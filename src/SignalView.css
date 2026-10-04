@@ -362,6 +362,11 @@ button.signal-talk-line:hover {
   color: var(--muted);
 }
 
+.signal-cfp {
+  display: block;
+  color: var(--fuchsia);
+}
+
 .is-open > .signal-talk-line {
   background: var(--hover);
 }

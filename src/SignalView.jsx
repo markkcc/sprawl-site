@@ -125,8 +125,8 @@ export default function SignalView({ currentEvent, pastEvents, expandedTalks, to
           <ul className="signal-table">
             {currentEvent.talks.length === 0 && (
               <li className="signal-row signal-empty">
-                no talks scheduled yet. stay tuned.<br />
-                --&gt; Submit your own, email cfp@[this domain]
+                no talks scheduled yet. stay tuned.
+                <span className="signal-cfp">--&gt; Submit your own, email cfp@[this domain]</span>
               </li>
             )}
             {currentEvent.talks.map(talk => {
