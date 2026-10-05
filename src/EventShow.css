@@ -96,6 +96,42 @@
   outline: none;
 }
 
+/* The slash-command line, low and centred like a console prompt. */
+.event-show-command {
+  position: absolute;
+  left: 50%;
+  bottom: 14%;
+  transform: translateX(-50%);
+  min-width: min(420px, 80vw);
+  box-sizing: border-box;
+  padding: 12px 18px;
+  border: 1px solid #ccff8b88;
+  background: #050a0de6;
+  color: #ccff8b;
+  font: 22px 'Unifont', monospace;
+  white-space: pre;
+  box-shadow: 0 0 24px #ccff8b22;
+}
+
+.event-show-command::before {
+  content: '> ';
+  color: #638387;
+}
+
+.event-show-cursor {
+  display: inline-block;
+  width: 0.5em;
+  height: 1em;
+  margin-left: 2px;
+  vertical-align: -0.12em;
+  background: currentColor;
+  animation: event-show-blink 1s steps(1) infinite;
+}
+
+@keyframes event-show-blink {
+  50% { opacity: 0; }
+}
+
 @media (max-width: 600px) {
   .event-show-launch { padding: 0 0.7rem; font-size: 14px; }
   .event-show-launch-detail { display: none; }

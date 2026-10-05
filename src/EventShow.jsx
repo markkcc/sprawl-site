@@ -3,10 +3,19 @@ import { createPortal, flushSync } from 'react-dom'
 import { drawShow, sceneAt, SCENES } from './eventShowRenderer.js'
 import './EventShow.css'
 
+// Seconds to fade the live visuals to black before the slides, and back in afterwards.
+const FADE_TO_SLIDES = 1.5
+const FADE_FROM_SLIDES = 0.8
+const NOTICE_TIME = 3000
+
 // A page can restyle the launcher by passing its own class and label as children.
 export default function EventShow({ launcherVisible = true, launcherClassName, children }) {
   const [open, setOpen] = useState(false)
   const [locked, setLocked] = useState(false)
+  // Typing / opens a command line: the text typed so far, or null while it's closed.
+  const [command, setCommand] = useState(null)
+  const [notice, setNotice] = useState(null)
+  const [presenting, setPresenting] = useState(false)
   const screen = useRef(null)
   const canvas = useRef(null)
   const launch = useRef(null)
@@ -14,6 +23,8 @@ export default function EventShow({ launcherVisible = true, launcherClassName, c
   const exit = useRef(null)
   // The animation loop reads the lock through a ref; the state only drives the button.
   const lockedRef = useRef(false)
+  // The ESC button ends the slides first; the effect that owns them fills this in.
+  const endSlides = useRef(null)
 
   const setSceneLock = useCallback(value => {
     lockedRef.current = value
@@ -25,6 +36,9 @@ export default function EventShow({ launcherVisible = true, launcherClassName, c
       document.exitFullscreen().catch(() => {})
     }
     setSceneLock(false)
+    setCommand(null)
+    setNotice(null)
+    setPresenting(false)
     setOpen(false)
     launch.current?.focus()
   }, [setSceneLock])
@@ -57,6 +71,20 @@ export default function EventShow({ launcherVisible = true, launcherClassName, c
     let lockSpan = null
     let wakeLock
     let disposed = false
+    // Visible running time in seconds; the slides and their fades run on it while the loop stays paused.
+    let clock = 0
+    let typed = null
+    let noticeTimer
+    // While presenting: { slides, slide, started } with slide = { index, from, fromTime, start }.
+    // slides is the lazily loaded recap module, null until it arrives.
+    let deck = null
+    let fadeIn = -Infinity
+    // Fetch the recap slides as soon as the visuals open, and build their map while the loop idles, so
+    // /slides needs neither the network nor a pause when it's typed.
+    const recap = import('./recapSlides.js')
+    recap.then(module => {
+      if (!disposed) (window.requestIdleCallback ?? setTimeout)(() => module.prepare())
+    }).catch(() => {})
 
     async function keepAwake() {
       if (document.visibilityState !== 'visible' || !navigator.wakeLock) return
@@ -74,10 +102,90 @@ export default function EventShow({ launcherVisible = true, launcherClassName, c
       if (document.fullscreenElement === element) enteredFullscreen = true
       else if (enteredFullscreen) close()
     }
+    function say(message) {
+      clearTimeout(noticeTimer)
+      setNotice(message)
+      noticeTimer = setTimeout(() => setNotice(null), NOTICE_TIME)
+    }
+    function type(value) {
+      typed = value
+      setCommand(value)
+    }
+    function startSlides() {
+      if (deck) {
+        // Already presenting: back to the title card.
+        if (deck.slides) deck.slide = { index: 0, from: null, fromTime: 0, start: clock }
+        return
+      }
+      setSceneLock(false)
+      setPresenting(true)
+      const current = deck = { slides: null, slide: { index: 0, from: null, fromTime: 0, start: clock + FADE_TO_SLIDES }, started: clock }
+      recap.then(module => {
+        if (deck !== current) return
+        current.slides = module
+        // If the module was slow, start the title card once it's here rather than part way in.
+        current.slide.start = Math.max(current.slide.start, clock)
+      }).catch(() => {
+        if (deck !== current) return
+        stopSlides()
+        say('slides failed to load')
+      })
+    }
+    function stopSlides() {
+      deck = null
+      fadeIn = clock
+      setPresenting(false)
+      lastDraw = -Infinity
+    }
+    endSlides.current = stopSlides
+    function goToSlide(step) {
+      if (!deck?.slides || clock < deck.slide.start) return
+      const index = deck.slide.index + step
+      if (index < 0 || index >= deck.slides.SLIDES.length) return
+      deck.slide = { index, from: deck.slide.index, fromTime: clock - deck.slide.start, start: clock }
+    }
+    const COMMANDS = { slides: startSlides }
+    function run(line) {
+      const name = line.slice(1).trim().toLowerCase()
+      if (COMMANDS[name]) COMMANDS[name]()
+      else if (name) say(`unknown command: /${name}   try /${Object.keys(COMMANDS).join(' /')}`)
+    }
+    function commandKey(event) {
+      if (event.key === 'Escape') type(null)
+      else if (event.key === 'Enter') {
+        const line = typed
+        type(null)
+        run(line)
+      } else if (event.key === 'Backspace') type(typed.length > 1 ? typed.slice(0, -1) : null)
+      else if (event.key.length === 1 && !event.ctrlKey && !event.metaKey && !event.altKey) {
+        if (typed.length < 40) type(typed + event.key)
+      } else if (event.key === 'Tab') return false
+      event.preventDefault()
+      return true
+    }
     function keydown(event) {
-      if (event.key === 'Escape') {
+      if (typed !== null && commandKey(event)) return
+      if (event.key === '/' && !event.ctrlKey && !event.metaKey && !event.altKey) {
         event.preventDefault()
-        close()
+        clearTimeout(noticeTimer)
+        setNotice(null)
+        type('/')
+      } else if (event.key === 'Escape') {
+        event.preventDefault()
+        if (deck) stopSlides()
+        else close()
+      } else if (deck) {
+        // Arrows, space and presentation clickers (PageUp/PageDown) step through the slides.
+        if (['ArrowRight', 'PageDown', ' '].includes(event.key)) {
+          event.preventDefault()
+          goToSlide(1)
+        } else if (['ArrowLeft', 'PageUp'].includes(event.key)) {
+          event.preventDefault()
+          goToSlide(-1)
+        } else if (event.key === 'Tab') {
+          event.preventDefault()
+          exit.current?.focus()
+        }
       } else if (event.key === 'Tab') {
         event.preventDefault()
         ;(document.activeElement === lock.current ? exit : lock).current?.focus()
@@ -103,7 +211,10 @@ export default function EventShow({ launcherVisible = true, launcherClassName, c
     }
     function animate(now) {
       if (previousTime !== null && document.visibilityState === 'visible') {
-        elapsed += now - previousTime
+        const delta = now - previousTime
+        clock += delta / 1000
+        // The loop keeps running through the fade to black, then holds until the slides end.
+        if (!deck || clock - deck.started < FADE_TO_SLIDES) elapsed += delta
       }
       previousTime = now
       if (lockedRef.current) {
@@ -120,7 +231,18 @@ export default function EventShow({ launcherVisible = true, launcherClassName, c
       }
       // Cap drawing at 30 fps; scene timing stays independent of frame rate.
       if (now - lastDraw >= 1000 / 30) {
-        drawShow(context, canvas.current.width, canvas.current.height, elapsed / 1000, { fades: !lockedRef.current })
+        const { width, height } = canvas.current
+        if (deck?.slides && clock >= deck.slide.start) {
+          deck.slides.drawRecap(context, width, height, deck.slide, clock - deck.slide.start)
+        } else {
+          drawShow(context, width, height, elapsed / 1000, { fades: !lockedRef.current })
+          const black = deck ? (clock - deck.started) / FADE_TO_SLIDES : 1 - (clock - fadeIn) / FADE_FROM_SLIDES
+          if (black > 0) {
+            context.setTransform(1, 0, 0, 1, 0, 0)
+            context.fillStyle = `rgba(0, 0, 0, ${Math.min(1, black)})`
+            context.fillRect(0, 0, width, height)
+          }
+        }
         lastDraw = now
       }
       frame = requestAnimationFrame(animate)
@@ -136,6 +258,8 @@ export default function EventShow({ launcherVisible = true, launcherClassName, c
 
     return () => {
       disposed = true
+      clearTimeout(noticeTimer)
+      endSlides.current = null
       cancelAnimationFrame(frame)
       observer.disconnect()
       document.removeEventListener('keydown', keydown)
@@ -163,10 +287,16 @@ export default function EventShow({ launcherVisible = true, launcherClassName, c
     </button>
     {open && createPortal(
       <div ref={screen} className="event-show" role="dialog" aria-modal="true" aria-label="SPRAWL event visuals" tabIndex={-1}>
-        <canvas ref={canvas} aria-label="Looping NYC cyberpunk visuals: the SPRAWL challenge coin's circuit-traced Statue of Liberty rebuilt in glitching ASCII, rotating SPRAWL ASCII art, an ASCII New York skyline with the Brooklyn Bridge, neon signs and radio signals, simulated Turbo Vision desktop, subway signal-tracking board, hacker terminal with SSH session telemetry and a scrolling auth log, a Neuromancer-inspired wireframe city with a scrolling William Gibson passage, a radio spectrum waterfall, a btop-style system monitor with live graphs and a meetup-themed process list, a circuit board booting over a UART debug port, and Conway's Game of Life with a glider gun." role="img" />
+        <canvas ref={canvas} aria-label={presenting ? 'SPRAWL 0x7 one-year recap slides: a title card, then a dark map of New York City that flies to each venue. Arrow keys step through the slides.' : "Looping NYC cyberpunk visuals: the SPRAWL challenge coin's circuit-traced Statue of Liberty rebuilt in glitching ASCII, rotating SPRAWL ASCII art, an ASCII New York skyline with the Brooklyn Bridge, neon signs and radio signals, simulated Turbo Vision desktop, subway signal-tracking board, hacker terminal with SSH session telemetry and a scrolling auth log, a Neuromancer-inspired wireframe city with a scrolling William Gibson passage, a radio spectrum waterfall, a btop-style system monitor with live graphs and a meetup-themed process list, a circuit board booting over a UART debug port, and Conway's Game of Life with a glider gun."} role="img" />
+        {(command !== null || notice) && (
+          <div className="event-show-command" role="status">
+            {command !== null ? <>{command}<span className="event-show-cursor" aria-hidden="true" /></> : notice}
+          </div>
+        )}
         <div className="event-show-controls">
           <button
             ref={lock}
+            hidden={presenting}
             className="event-show-control"
             aria-pressed={locked}
             onClick={event => {
@@ -177,7 +307,17 @@ export default function EventShow({ launcherVisible = true, launcherClassName, c
           >
             {locked ? 'LOCKED' : 'LOCK'} <span>/ L</span>
           </button>
-          <button ref={exit} className="event-show-control" onClick={close}>ESC <span>/ EXIT</span></button>
+          <button
+            ref={exit}
+            className="event-show-control"
+            onClick={event => {
+              if (!presenting) return close()
+              endSlides.current?.()
+              if (event.detail) screen.current.focus()
+            }}
+          >
+            ESC <span>/ {presenting ? 'END SLIDES' : 'EXIT'}</span>
+          </button>
         </div>
       </div>, document.body,
     )}

@@ -3,13 +3,13 @@ import { LIBERTY_CHARS, LIBERTY_TINTS } from './libertyAscii.js'
 
 const W = 1440
 const H = 900
-const INK = '#050a0d'
-const GREEN = '#ccff8b'
-const CYAN = '#6fe7e7'
-const MUTED = '#638387'
-const PINK = '#ee89ba'
-const FUCHSIA = '#ff4fd8'
-const FONT = 'Unifont, monospace'
+export const INK = '#050a0d'
+export const GREEN = '#ccff8b'
+export const CYAN = '#6fe7e7'
+export const MUTED = '#638387'
+export const PINK = '#ee89ba'
+export const FUCHSIA = '#ff4fd8'
+export const FONT = 'Unifont, monospace'
 
 const GLYPHS = {
   S: ['01111', '11000', '11000', '01110', '00011', '00011', '11110'],
@@ -62,14 +62,14 @@ function today() {
   return `${WEEKDAYS[date.getDay()]}, ${date.getDate()} ${MONTHS[date.getMonth()]} ${date.getFullYear()}`
 }
 
-function text(ctx, value, x, y, size = 18, color = CYAN, align = 'left') {
+export function text(ctx, value, x, y, size = 18, color = CYAN, align = 'left') {
   ctx.font = `${size}px ${FONT}`
   ctx.fillStyle = color
   ctx.textAlign = align
   ctx.textBaseline = 'top'
   ctx.fillText(value, x, y)
 }
-function line(ctx, x1, y1, x2, y2, color = MUTED, width = 1) {
+export function line(ctx, x1, y1, x2, y2, color = MUTED, width = 1) {
   ctx.strokeStyle = color
   ctx.lineWidth = width
   ctx.beginPath()
@@ -77,7 +77,7 @@ function line(ctx, x1, y1, x2, y2, color = MUTED, width = 1) {
   ctx.lineTo(x2, y2)
   ctx.stroke()
 }
-function box(ctx, x, y, w, h, fill, stroke) {
+export function box(ctx, x, y, w, h, fill, stroke) {
   if (fill) { ctx.fillStyle = fill; ctx.fillRect(x, y, w, h) }
   if (stroke) { ctx.strokeStyle = stroke; ctx.lineWidth = 1; ctx.strokeRect(x, y, w, h) }
 }
@@ -94,7 +94,7 @@ function polyline(ctx, points, color, width) {
   ctx.lineWidth = width
   ctx.stroke()
 }
-const ease = x => x <= 0 ? 0 : x >= 1 ? 1 : x * x * (3 - 2 * x)
+export const ease = x => x <= 0 ? 0 : x >= 1 ? 1 : x * x * (3 - 2 * x)
 const layerCache = new Map()
 // Paints a static layer once per scale into an offscreen bitmap and draws that each frame.
 // Until the bundled font is ready it paints directly, so a fallback font is never baked in.
@@ -2072,10 +2072,10 @@ function life(ctx, t) {
 }
 
 // The SPRAWL challenge coin's circuit-traced Liberty, rebuilt from ASCII with brief, local glitches.
-const COIN_X = 1010
-const COIN_Y = 446
-const COIN_R = 345
-const FACE_R = 300
+export const COIN_X = 1010
+export const COIN_Y = 446
+export const COIN_R = 345
+export const FACE_R = 300
 const GLYPH_W = 5
 const GLYPH_H = 10
 const HEAD_X = COIN_X - 300
@@ -2267,7 +2267,7 @@ function liberty(ctx, t) {
   drawCoin(ctx, t)
 }
 
-function drawCoin(ctx, t) {
+export function drawCoin(ctx, t) {
   const { burst, glitching, jitter, revealed } = coinTiming(t)
   // Coin body: black nickel with a reeded edge.
   const metal = ctx.createRadialGradient(COIN_X - 120, COIN_Y - 150, 30, COIN_X, COIN_Y, COIN_R * 1.15)
