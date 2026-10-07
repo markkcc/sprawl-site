@@ -4,7 +4,30 @@ import EventShow from './EventShow.jsx'
 import CoinIntro from './CoinIntro.jsx'
 import ReaderView from './ReaderView.jsx'
 import SignalView from './SignalView.jsx'
-import { REGISTER_URL, currentEvent, pastEvents, hasAbstract, abstractParagraphs, eventDetails } from './events.js'
+import { currentEvent, pastEvents, hasAbstract, abstractParagraphs, eventDetails, isRegistrationOpen, registrationCountdown } from './events.js'
+
+// The register button, or a countdown in its place until registration opens. Ticks on its own so the page doesn't re-render every second.
+function RegisterButton({ event }) {
+  const [now, setNow] = useState(() => new Date())
+  useEffect(() => {
+    const timer = setInterval(() => setNow(new Date()), 1000)
+    return () => clearInterval(timer)
+  }, [])
+
+  if (!isRegistrationOpen(event, now)) {
+    const opensIn = registrationCountdown(event, now)
+    return <div className="register-countdown" role="timer">Registration {opensIn ? `opens in: ${opensIn}` : 'opening soon'}</div>
+  }
+  const handleClick = (e) => {
+    e.preventDefault()
+    window.open(event.registerUrl, '_blank', 'noopener,noreferrer')
+  }
+  return (
+    <a href="#" className="register-button" onClick={handleClick}>
+      Register
+    </a>
+  )
+}
 
 function App() {
   const [memoryAddresses, setMemoryAddresses] = useState([])
@@ -118,11 +141,6 @@ function App() {
     }))
   }
 
-  const handleRegisterClick = (e) => {
-    e.preventDefault()
-    window.open(REGISTER_URL, '_blank', 'noopener,noreferrer')
-  }
-
   // Header and expandable abstract shared by every talk box.
   const renderTalk = (event, talk) => {
     const key = `${event.id}-${talk.id}`
@@ -197,7 +215,6 @@ function App() {
         <ReaderView
           currentEvent={currentEvent}
           pastEvents={pastEvents}
-          registerUrl={REGISTER_URL}
           expandedTalks={expandedTalks}
           toggleTalk={toggleTalk}
         />
@@ -205,7 +222,6 @@ function App() {
         <SignalView
           currentEvent={currentEvent}
           pastEvents={pastEvents}
-          registerUrl={REGISTER_URL}
           expandedTalks={expandedTalks}
           toggleTalk={toggleTalk}
         />
@@ -247,12 +263,11 @@ function App() {
           <div className="event-details">
             <h2>-- {currentEvent.name} --</h2>
             <div>{eventDetails(currentEvent)}</div>
-            <a href="#" className="register-button" onClick={handleRegisterClick}>
-              Register
-            </a>
+            <RegisterButton event={currentEvent} />
           </div>
 
           <div className="talks-container">
+            {currentEvent.talks.length === 0 && <div className="talk-box talk-empty">Talks to be announced.</div>}
             {currentEvent.talks.map(talk => {
               const key = `${currentEvent.id}-${talk.id}`
               const effectOpacity = (hoveredTalk === key && !expandedTalks[key]) ? 1.0 : Math.min(1.0, 0.5 + (effectIntensity - 1) * 0.071)

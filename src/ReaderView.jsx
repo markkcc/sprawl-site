@@ -1,10 +1,20 @@
-import { Fragment } from 'react'
-import { hasAbstract, abstractParagraphs, eventDetails } from './events.js'
+import { Fragment, useEffect, useState } from 'react'
+import { hasAbstract, abstractParagraphs, eventDetails, isRegistrationOpen, registrationCountdown } from './events.js'
 import './ReaderView.css'
 
 // Plain, table-based page for the reader theme.
-export default function ReaderView({ currentEvent, pastEvents, registerUrl, expandedTalks, toggleTalk }) {
+export default function ReaderView({ currentEvent, pastEvents, expandedTalks, toggleTalk }) {
+  const [now, setNow] = useState(() => new Date())
+  useEffect(() => {
+    const timer = setInterval(() => setNow(new Date()), 1000)
+    return () => clearInterval(timer)
+  }, [])
+  const opensIn = registrationCountdown(currentEvent, now)
+
   function talkRows(event) {
+    if (event.talks.length === 0) {
+      return <tr><td colSpan={3}>Talks to be announced.</td></tr>
+    }
     return event.talks.map(talk => {
       const key = `${event.id}-${talk.id}`
       const expanded = hasAbstract(talk) && expandedTalks[key]
@@ -69,7 +79,9 @@ export default function ReaderView({ currentEvent, pastEvents, registerUrl, expa
       <h2>{currentEvent.name}</h2>
       <p>
         {eventDetails(currentEvent)}.{' '}
-        <a href={registerUrl} target="_blank" rel="noopener noreferrer">Register</a>
+        {isRegistrationOpen(currentEvent, now)
+          ? <a href={currentEvent.registerUrl} target="_blank" rel="noopener noreferrer">Register</a>
+          : <span role="timer">Registration {opensIn ? `opens in ${opensIn}` : 'opening soon'}.</span>}
       </p>
       <table>
         {head}

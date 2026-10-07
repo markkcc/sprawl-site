@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import EventShow from './EventShow.jsx'
 import Waterfall from './Waterfall.jsx'
 import { AuthLog, LinkPanel } from './Telemetry.jsx'
-import { hasAbstract, abstractParagraphs } from './events.js'
+import { hasAbstract, abstractParagraphs, hasFullDate, isRegistrationOpen, registrationCountdown } from './events.js'
 import './SignalView.css'
 
 // Operator-console page for the second theme, after the fullscreen event visuals.
@@ -53,14 +53,15 @@ function Talk({ talk, expanded, onToggle, className, children }) {
   )
 }
 
-export default function SignalView({ currentEvent, pastEvents, registerUrl, expandedTalks, toggleTalk }) {
+export default function SignalView({ currentEvent, pastEvents, expandedTalks, toggleTalk }) {
   const [now, setNow] = useState(() => new Date())
   useEffect(() => {
     const timer = setInterval(() => setNow(new Date()), 1000)
     return () => clearInterval(timer)
   }, [])
 
-  const days = daysUntil(currentEvent.date, now)
+  const eta = hasFullDate(currentEvent) ? countdown(daysUntil(currentEvent.date, now)) : currentEvent.eta.toUpperCase()
+  const opensIn = registrationCountdown(currentEvent, now)
   const talkCount = pastEvents.reduce((total, event) => total + event.talks.length, 0)
 
   return (
@@ -104,11 +105,15 @@ export default function SignalView({ currentEvent, pastEvents, registerUrl, expa
             <h2 className="signal-title"><span className="signal-live" aria-hidden="true">●</span> next run</h2>
             <p className="signal-event-name">{currentEvent.name.toUpperCase()}</p>
             <dl className="signal-facts">
-              <dt>date</dt><dd><time dateTime={currentEvent.date}>{currentEvent.date}</time></dd>
+              <dt>date</dt><dd>{hasFullDate(currentEvent) ? <time dateTime={currentEvent.date}>{currentEvent.date}</time> : currentEvent.date}</dd>
               <dt>host</dt><dd>{currentEvent.venue}</dd>
-              <dt>eta</dt><dd className="signal-eta">{countdown(days)}</dd>
+              <dt>eta</dt><dd className="signal-eta">{eta}</dd>
             </dl>
-            <a className="signal-register" href={registerUrl} target="_blank" rel="noopener noreferrer">&gt;&gt; REGISTER &lt;&lt;</a>
+            {isRegistrationOpen(currentEvent, now) ? (
+              <a className="signal-register" href={currentEvent.registerUrl} target="_blank" rel="noopener noreferrer">&gt;&gt; REGISTER &lt;&lt;</a>
+            ) : (
+              <span className="signal-register is-locked" role="timer">REGISTRATION {opensIn ? `OPENS IN ${opensIn}` : 'OPENING SOON'}</span>
+            )}
           </section>
         </div>
 
@@ -118,6 +123,12 @@ export default function SignalView({ currentEvent, pastEvents, registerUrl, expa
             <span>PID</span><span>TALK</span><span>SPEAKER</span><span>ABS</span>
           </div>
           <ul className="signal-table">
+            {currentEvent.talks.length === 0 && (
+              <li className="signal-row signal-empty">
+                no talks scheduled yet. stay tuned.
+                <span className="signal-cfp">--&gt; Submit your own, email cfp@[this domain]</span>
+              </li>
+            )}
             {currentEvent.talks.map(talk => {
               const key = `${currentEvent.id}-${talk.id}`
               return (

@@ -298,6 +298,17 @@
   box-shadow: none;
 }
 
+/* Locked until registration opens: a greyed-out face that ignores hover and press. */
+.signal-register.is-locked {
+  background: var(--muted);
+  cursor: not-allowed;
+}
+
+.signal-register.is-locked:active {
+  transform: none;
+  box-shadow: 6px 6px 0 var(--hover);
+}
+
 /* Talks as a process table, after htop. */
 .signal-table-head,
 .signal-row .signal-talk-line {
@@ -344,6 +355,16 @@ button.signal-talk-line:hover {
 
 .signal-row + .signal-row {
   border-top: 1px solid var(--line);
+}
+
+.signal-empty {
+  padding: 8px;
+  color: var(--muted);
+}
+
+.signal-cfp {
+  display: block;
+  color: var(--fuchsia);
 }
 
 .is-open > .signal-talk-line {
