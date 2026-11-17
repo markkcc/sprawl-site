@@ -228,6 +228,79 @@
   animation: signal-blink 1s steps(1) infinite;
 }
 
+/* Newsletter signup: the Buttondown embed form, restyled to the console. */
+.signal-newsletter {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 8px 2ch;
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px dashed var(--line-bright);
+}
+
+.signal-newsletter-title,
+.signal-newsletter label,
+.signal-newsletter p {
+  grid-column: 1 / -1;
+  margin: 0;
+}
+
+.signal-newsletter-title {
+  font-size: inherit;
+  font-weight: normal;
+  color: var(--fuchsia);
+}
+
+.signal-newsletter-title span {
+  color: var(--text);
+}
+
+.signal-newsletter-title span::before {
+  content: '· ';
+  color: var(--muted);
+}
+
+.signal-newsletter label {
+  color: var(--muted);
+}
+
+.signal-newsletter input {
+  min-width: 0;
+  padding: 6px 1ch;
+  border: 1px solid var(--line-bright);
+  border-radius: 0;
+  background: var(--ink);
+  font: inherit;
+  color: var(--green);
+}
+
+.signal-newsletter input[type="email"]:focus {
+  border-color: var(--green);
+}
+
+.signal-newsletter input[type="submit"] {
+  padding: 6px 2ch;
+  border-color: var(--green);
+  cursor: pointer;
+}
+
+.signal-newsletter input[type="submit"]:hover {
+  background: var(--green);
+  color: var(--ink);
+}
+
+.signal-newsletter p {
+  font-size: 14px;
+}
+
+.signal .signal-newsletter p a {
+  color: var(--muted);
+}
+
+.signal .signal-newsletter p a:hover {
+  color: var(--cyan);
+}
+
 .signal-event-name {
   margin: 0 0 12px;
   font-size: 32px;
@@ -254,8 +327,11 @@
   color: var(--amber);
 }
 
-/* The upcoming event is the one panel lit up: green frame, slow glow, solid title. */
+/* The upcoming event is the one panel lit up: green frame, slow glow, solid title.
+   It is as tall as the readme beside it, so its rows spread out and the register button takes up the slack. */
 .signal-next {
+  display: flex;
+  flex-direction: column;
   border-color: var(--green);
   animation: signal-glow 3s ease-in-out infinite;
 }
@@ -275,8 +351,25 @@
   text-shadow: 0 0 12px rgba(232, 196, 106, 0.4);
 }
 
+.signal-next .signal-event-name {
+  margin-bottom: 20px;
+}
+
 .signal-next .signal-facts {
   align-items: baseline;
+  row-gap: 10px;
+  margin-bottom: 28px;
+}
+
+.signal-next .signal-register {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  justify-content: center;
+  min-height: 56px;
+  margin: 0 6px 6px 0;
+  font-size: 24px;
+  text-align: center;
 }
 
 /* A Turbo Vision style button: solid face with a hard shadow that it loses when pressed. */
