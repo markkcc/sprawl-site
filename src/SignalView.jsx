@@ -104,7 +104,7 @@ export default function SignalView({ currentEvent, pastEvents, expandedTalks, to
               method="post"
               className="embeddable-buttondown-form signal-newsletter"
             >
-              <h3 className="signal-newsletter-title">newsletter</h3>
+              <h3 className="signal-newsletter-title">newsletter <span>find out about our next events</span></h3>
               <label htmlFor="bd-email">Enter your email</label>
               <input type="email" name="email" id="bd-email" />
               <input type="submit" value="Subscribe" />
