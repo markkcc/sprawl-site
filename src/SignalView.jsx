@@ -99,6 +99,21 @@ export default function SignalView({ currentEvent, pastEvents, expandedTalks, to
               <li>20-min talks by smart people we all like.</li>
               <li>Hosted every two months.<span className="signal-cursor" aria-hidden="true" /></li>
             </ul>
+            <form
+              action="https://buttondown.com/api/emails/embed-subscribe/sprawl"
+              method="post"
+              className="embeddable-buttondown-form signal-newsletter"
+            >
+              <h3 className="signal-newsletter-title">newsletter</h3>
+              <label htmlFor="bd-email">Enter your email</label>
+              <input type="email" name="email" id="bd-email" />
+              <input type="submit" value="Subscribe" />
+              <p>
+                <a href="https://buttondown.com/refer/sprawl" target="_blank" rel="noopener noreferrer">
+                  Powered by Buttondown.
+                </a>
+              </p>
+            </form>
           </section>
 
           <section className="signal-panel signal-next" id="next">
@@ -106,6 +121,7 @@ export default function SignalView({ currentEvent, pastEvents, expandedTalks, to
             <p className="signal-event-name">{currentEvent.name.toUpperCase()}</p>
             <dl className="signal-facts">
               <dt>date</dt><dd>{hasFullDate(currentEvent) ? <time dateTime={currentEvent.date}>{currentEvent.date}</time> : currentEvent.date}</dd>
+              {currentEvent.time && <><dt>time</dt><dd>{currentEvent.time}</dd></>}
               <dt>host</dt><dd>{currentEvent.venue}</dd>
               <dt>eta</dt><dd className="signal-eta">{eta}</dd>
             </dl>

@@ -10,11 +10,12 @@ const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 
 const ordinal = day => day + (day % 10 === 1 && day !== 11 ? 'st' : day % 10 === 2 && day !== 12 ? 'nd' : day % 10 === 3 && day !== 13 ? 'rd' : 'th')
 // A date or venue that isn't set yet is written as '??', e.g. '2026-12-??'.
 export const hasFullDate = event => /^\d{4}-\d{2}-\d{2}$/.test(event.date)
-// "October 6th, 2026 @ Microsoft, co-sponsored by Crash Override", or "December ??, 2026 @ ??"
-export function eventDetails({ date, venue }) {
+// "October 6th, 2026 @ Microsoft, co-sponsored by Crash Override", or "December ??, 2026 @ ??".
+// An event with a time reads "December 9th, 2026, 6:00 PM - 8:30 PM @ Amazon".
+export function eventDetails({ date, time, venue }) {
   const [year, month, day] = date.split('-')
   const dayText = Number.isInteger(Number(day)) ? ordinal(Number(day)) : day
-  return `${MONTHS[month - 1]} ${dayText}, ${year} @ ${venue}`
+  return `${MONTHS[month - 1]} ${dayText}, ${year}${time ? `, ${time}` : ''} @ ${venue}`
 }
 
 // Registration stays locked behind a countdown until registerOpens, and until there is a registerUrl to open.
@@ -26,6 +27,35 @@ export function registrationCountdown(event, now) {
   const parts = [[Math.floor(seconds / 86400), 'd'], [Math.floor(seconds / 3600) % 24, 'h'], [Math.floor(seconds / 60) % 60, 'm']]
   return parts.filter(([value]) => value > 0).map(([value, unit]) => value + unit).concat(`${seconds % 60}s`).join(' ')
 }
+
+const talks0x8 = [
+  {
+    id: 1,
+    title: "Incomplete by Design: Why Modern Runtime Security is Broken",
+    speaker: "Samy Bahra",
+    description: `Once we peel back the layers of marketing, you'll discover that the current approach to runtime security is fundamentally broken. It is broken because: 1) Less than 1% of forensic system activity is logged. 2) The causal and historical behavior of systems is not modeled. 3) The fundamental data model around identity is broken. 4) The architectures are broken from a QoS perspective.
+
+This in turn has many deep implications for both detection and investigation. Even with detections, investigation is a game of chance and usually ends in a dead end, even against commodity campaigns.
+
+Section 1: Demo, I will share with you a shell that will evade every single runtime security in existence and tell you briefly how that works.
+
+- The broken identity model tied to all detection and policies. First, rooted in file identity. Demonstrate generic evasion of both execution policies and file access policies. I'll work in sequence from silly / funny evasions (/etc//shadow ... yeah seriously) to more sophisticated sequences.
+
+- The broken runtime model for Linux and honorable mention of other platforms (Windows limitations, Mac OS limitations). The weaknesses of BPF, including attacker-controlled hardware resources and it's interaction with the BPF runtime model (such as bounded memory and execution), are difficult to mitigate (and usually aren't mitigated). Demonstrate generic evasion vectors based on these weaknesses.
+
+- The limited observability (which can also be used for counter-intelligence) that is then available following a detection.
+
+Section 2: Full systems provenance, where we are today after 20 years without a practical solution. Introduce CamFlow, Unicorn and other seminal work in the area, along with the challenges faced.
+
+Though this is Linux specific, it is broadly applicable and I'll note the trade-offs for different operating systems during the talk.`
+  },
+  {
+    id: 2,
+    title: "TBD",
+    speaker: "TBD",
+    description: "TBD"
+  }
+]
 
 const talks0x7 = [
   {
@@ -168,12 +198,12 @@ This talk will test the promise of privacy provided by these systems -- covering
 export const currentEvent = {
   id: '0x8',
   name: 'Sprawl 0x8',
-  date: '2026-12-??',
-  venue: '??',
-  eta: '2 months',
+  date: '2026-12-09',
+  time: '6:00 PM - 8:30 PM',
+  venue: 'Amazon',
   registerOpens: '2026-11-03T18:00:00-05:00',
-  registerUrl: null,
-  talks: []
+  registerUrl: 'https://luma.com/6svc4na1',
+  talks: talks0x8
 }
 
 // Newest first.
